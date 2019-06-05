@@ -123,6 +123,74 @@ sub_pel_filters_4[SUBPEL_SHIFTS]) = {
 
 #define MAX_FILTER_TAP 8
 
+#if COMP_MODE
+
+int get_relative_dist(const OrderHintInfoEnc *oh, int a, int b);
+static const int quant_dist_weight[4][2] = {
+  { 2, 3 }, { 2, 5 }, { 2, 7 }, { 1, MAX_FRAME_DISTANCE }
+};
+static const int quant_dist_lookup_table[2][4][2] = {
+  { { 9, 7 }, { 11, 5 }, { 12, 4 }, { 13, 3 } },
+  { { 7, 9 }, { 5, 11 }, { 4, 12 }, { 3, 13 } },
+};
+
+void av1_dist_wtd_comp_weight_assign(
+	//const AV1_COMMON *cm,
+	//const MB_MODE_INFO *mbmi,
+	PictureControlSet  *picture_control_set_ptr,
+	int cur_frame_index ,
+    int bck_frame_index ,
+    int fwd_frame_index,
+	int compound_idx,
+	int order_idx,
+	int *fwd_offset, int *bck_offset,
+	int *use_dist_wtd_comp_avg,
+	int is_compound) {
+
+
+	assert(fwd_offset != NULL && bck_offset != NULL);
+	if (!is_compound || /*mbmi->*/compound_idx) {
+		*use_dist_wtd_comp_avg = 0;
+		return;
+	}
+
+	*use_dist_wtd_comp_avg = 1;
+	//const RefCntBuffer *const bck_buf = get_ref_frame_buf(cm, mbmi->ref_frame[0]);
+	//const RefCntBuffer *const fwd_buf = get_ref_frame_buf(cm, mbmi->ref_frame[1]);
+	//const int cur_frame_index = cm->cur_frame->order_hint;
+	//int bck_frame_index = 0, fwd_frame_index = 0;
+
+	//if (bck_buf != NULL) bck_frame_index = bck_buf->order_hint;
+	//if (fwd_buf != NULL) fwd_frame_index = fwd_buf->order_hint;
+
+	int d0 = clamp(abs(get_relative_dist(&picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->order_hint_info_st, //&cm->seq_params.order_hint_info,
+		fwd_frame_index, cur_frame_index)),
+		0, MAX_FRAME_DISTANCE);
+	int d1 = clamp(abs(get_relative_dist(&picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->order_hint_info_st, //&cm->seq_params.order_hint_info,
+		cur_frame_index, bck_frame_index)),
+		0, MAX_FRAME_DISTANCE);
+
+	const int order = d0 <= d1;
+
+	if (d0 == 0 || d1 == 0) {
+		*fwd_offset = quant_dist_lookup_table[order_idx][3][order];
+		*bck_offset = quant_dist_lookup_table[order_idx][3][1 - order];
+		return;
+	}
+
+	int i;
+	for (i = 0; i < 3; ++i) {
+		int c0 = quant_dist_weight[i][order];
+		int c1 = quant_dist_weight[i][!order];
+		int d0_c0 = d0 * c0;
+		int d1_c1 = d1 * c1;
+		if ((d0 > d1 && d0_c0 < d1_c1) || (d0 <= d1 && d0_c0 > d1_c1)) break;
+	}
+
+	*fwd_offset = quant_dist_lookup_table[order_idx][i][order];
+	*bck_offset = quant_dist_lookup_table[order_idx][i][1 - order];
+}
+#endif
 void av1_convolve_2d_sr_c(const uint8_t *src, int32_t src_stride, uint8_t *dst,
     int32_t dst_stride, int32_t w, int32_t h,
     InterpFilterParams *filter_params_x,
@@ -994,6 +1062,9 @@ EbErrorType av1_inter_prediction(
     uint8_t                                 ref_frame_type,
     MvUnit                               *mv_unit,
     uint8_t                                  use_intrabc,
+#if COMP_MODE
+	uint8_t                                compound_idx,
+#endif
     uint16_t                                pu_origin_x,
     uint16_t                                pu_origin_y,
     uint8_t                                 bwidth,
@@ -1236,6 +1307,10 @@ EbErrorType av1_inter_prediction(
         }
     }
 
+#if COMP_MODE
+	MvReferenceFrame rf[2];
+	av1_set_ref_frame(rf, ref_frame_type);
+#endif
     if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
         //List0-Y
         mv.col = mv_unit->mv[REF_LIST_0].x;
@@ -1253,11 +1328,11 @@ EbErrorType av1_inter_prediction(
         conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstY, 128, is_compound, EB_8BIT);
         av1_get_convolve_filter_params(interp_filters, &filter_params_x,
             &filter_params_y, bwidth, bheight);
-
+       
         convolve[subpel_x != 0][subpel_y != 0][is_compound](
             src_ptr,
             src_stride,
-            dst_ptr,
+            dst_ptr,//used only in L0,
             dst_stride,
             bwidth,
             bheight,
@@ -1348,6 +1423,29 @@ EbErrorType av1_inter_prediction(
         conv_params = get_conv_params_no_round(0, (mv_unit->pred_direction == BI_PRED) ? 1 : 0, 0, tmp_dstY, 128, is_compound, EB_8BIT);
         av1_get_convolve_filter_params(interp_filters, &filter_params_x,
             &filter_params_y, bwidth, bheight);
+#if COMP_MODE
+		//the luma data is applied to chroma below
+		av1_dist_wtd_comp_weight_assign(
+			picture_control_set_ptr,
+			picture_control_set_ptr->parent_pcs_ptr->cur_order_hint,// cur_frame_index,
+			picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[0] - 1],// bck_frame_index,
+			picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[1] - 1],// fwd_frame_index,
+			compound_idx,
+			0,// order_idx,
+			&conv_params.fwd_offset, &conv_params.bck_offset,
+			&conv_params.use_dist_wtd_comp_avg, is_compound);
+		conv_params.use_jnt_comp_avg =  conv_params.use_dist_wtd_comp_avg;
+#endif
+
+#if 0
+		if(is_compound && is_masked_compound_type(mi->interinter_comp.type)
+			av1_make_masked_inter_predictor(
+				pre[ref], src_stride[ref], dst, dst_buf->stride,
+				&subpel_params[ref], sf, bw, bh, &conv_params, mi->interp_filters,
+				plane, &warp_types, mi_x >> pd->subsampling_x,
+				mi_y >> pd->subsampling_y, ref, xd, cm->allow_warped_motion);
+		else
+#endif
 
         convolve[subpel_x != 0][subpel_y != 0][is_compound](
             src_ptr,
@@ -1373,7 +1471,18 @@ EbErrorType av1_inter_prediction(
             subpel_y = mv_q4.row & SUBPEL_MASK;
             src_ptr = src_ptr + (mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS);
             conv_params = get_conv_params_no_round(0, (mv_unit->pred_direction == BI_PRED) ? 1 : 0, 0, tmp_dstCb, 64, is_compound, EB_8BIT);
-
+#if COMP_MODE
+			av1_dist_wtd_comp_weight_assign(
+				picture_control_set_ptr,
+				picture_control_set_ptr->parent_pcs_ptr->cur_order_hint,// cur_frame_index,
+				picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[0] - 1],// bck_frame_index,
+				picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[1] - 1],// fwd_frame_index,
+				compound_idx,
+				0,// order_idx,
+				&conv_params.fwd_offset, &conv_params.bck_offset,
+				&conv_params.use_dist_wtd_comp_avg, is_compound);
+			conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
+#endif
             av1_get_convolve_filter_params(interp_filters, &filter_params_x,
                 &filter_params_y, blk_geom->bwidth_uv, blk_geom->bheight_uv);
 
@@ -1401,6 +1510,18 @@ EbErrorType av1_inter_prediction(
             subpel_y = mv_q4.row & SUBPEL_MASK;
             src_ptr = src_ptr + (mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS);
             conv_params = get_conv_params_no_round(0, (mv_unit->pred_direction == BI_PRED) ? 1 : 0, 0, tmp_dstCr, 64, is_compound, EB_8BIT);
+#if COMP_MODE
+			av1_dist_wtd_comp_weight_assign(
+				picture_control_set_ptr,
+				picture_control_set_ptr->parent_pcs_ptr->cur_order_hint,// cur_frame_index,
+				picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[0] - 1],// bck_frame_index,
+				picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[1] - 1],// fwd_frame_index,
+				compound_idx,
+				0,// order_idx,
+				&conv_params.fwd_offset, &conv_params.bck_offset,
+				&conv_params.use_dist_wtd_comp_avg, is_compound);
+			conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
+#endif
             convolve[subpel_x != 0][subpel_y != 0][is_compound](
                 src_ptr,
                 src_stride,
@@ -3607,6 +3728,9 @@ static const int32_t filter_sets[DUAL_FILTER_SET_SIZE][2] = {
         candidate_buffer_ptr->candidate_ptr->ref_frame_type,
         &mv_unit,
         0,
+#if COMP_MODE
+		candidate_buffer_ptr->candidate_ptr->compound_idx,
+#endif
         md_context_ptr->cu_origin_x,
         md_context_ptr->cu_origin_y,
         md_context_ptr->blk_geom->bwidth,
@@ -3681,6 +3805,9 @@ static const int32_t filter_sets[DUAL_FILTER_SET_SIZE][2] = {
                         candidate_buffer_ptr->candidate_ptr->ref_frame_type,
                         &mv_unit,
                         0,
+#if COMP_MODE
+						candidate_buffer_ptr->candidate_ptr->compound_idx,  
+#endif
                         md_context_ptr->cu_origin_x,
                         md_context_ptr->cu_origin_y,
                         md_context_ptr->blk_geom->bwidth,
@@ -3754,6 +3881,9 @@ static const int32_t filter_sets[DUAL_FILTER_SET_SIZE][2] = {
                         candidate_buffer_ptr->candidate_ptr->ref_frame_type,
                         &mv_unit,
                         0,
+#if COMP_MODE
+						candidate_buffer_ptr->candidate_ptr->compound_idx,
+#endif
                         md_context_ptr->cu_origin_x,
                         md_context_ptr->cu_origin_y,
                         md_context_ptr->blk_geom->bwidth,
@@ -3829,6 +3959,9 @@ static const int32_t filter_sets[DUAL_FILTER_SET_SIZE][2] = {
                         candidate_buffer_ptr->candidate_ptr->ref_frame_type,
                         &mv_unit,
                         0,
+#if COMP_MODE
+						candidate_buffer_ptr->candidate_ptr->compound_idx,
+#endif
                         md_context_ptr->cu_origin_x,
                         md_context_ptr->cu_origin_y,
                         md_context_ptr->blk_geom->bwidth,
@@ -4271,6 +4404,9 @@ EbErrorType inter_pu_prediction_av1(
             candidate_buffer_ptr->candidate_ptr->ref_frame_type,
             &mv_unit,
             1,//use_intrabc
+#if COMP_MODE
+			1,//1 for avg
+#endif
             md_context_ptr->cu_origin_x,
             md_context_ptr->cu_origin_y,
             md_context_ptr->blk_geom->bwidth,
@@ -4454,6 +4590,9 @@ EbErrorType inter_pu_prediction_av1(
             candidate_buffer_ptr->candidate_ptr->ref_frame_type,
             &mv_unit,
             candidate_buffer_ptr->candidate_ptr->use_intrabc,
+#if COMP_MODE
+			candidate_buffer_ptr->candidate_ptr->compound_idx,
+#endif
             md_context_ptr->cu_origin_x,
             md_context_ptr->cu_origin_y,
             md_context_ptr->blk_geom->bwidth,

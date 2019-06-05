@@ -55,6 +55,7 @@ uint64_t  get_ref_poc(PictureDecisionContext *context, uint64_t curr_picture_num
 
 #if SETUP_SKIP
 
+#if !COMP_MODE
 typedef struct {
     int enable_order_hint;           // 0 - disable order hint, and related tools
     int order_hint_bits_minus_1;     // dist_wtd_comp, ref_frame_mvs,
@@ -66,7 +67,7 @@ typedef struct {
     int enable_ref_frame_mvs;        // 0 - disable ref frame mvs
                                                            // 1 - enable it
 } OrderHintInfo;
-
+#endif
 typedef struct {
     MvReferenceFrame ref_type;
     int used;
@@ -75,7 +76,11 @@ typedef struct {
 
 MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx);
 
+#if COMP_MODE
+ int get_relative_dist(const OrderHintInfoEnc *oh, int a, int b) {
+#else
 static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
+#endif
     if (!oh->enable_order_hint) return 0;
 
     const int bits = oh->order_hint_bits_minus_1 + 1;
@@ -133,11 +138,15 @@ void av1_setup_skip_mode_allowed(PictureParentControlSet  *parent_pcs_ptr) {
     }
 #endif
 
+#if COMP_MODE
+	const OrderHintInfoEnc *const order_hint_info = &parent_pcs_ptr->sequence_control_set_ptr->order_hint_info_st;
+#else
     OrderHintInfo order_hint_info_st;
     order_hint_info_st.enable_order_hint = 1;
     order_hint_info_st.order_hint_bits_minus_1 = 6;
 
     const OrderHintInfo *const order_hint_info = &order_hint_info_st;// cm->seq_params.order_hint_info;
+#endif
     SkipModeInfo *const skip_mode_info = &parent_pcs_ptr->skip_mode_info;// cm->current_frame.skip_mode_info;
 
     skip_mode_info->skip_mode_allowed = 0;
@@ -229,6 +238,11 @@ void av1_setup_skip_mode_allowed(PictureParentControlSet  *parent_pcs_ptr) {
     //4 :BWD
     //5 :ALT2
     //6 :ALT
+#if COMP_MODE
+	parent_pcs_ptr->cur_order_hint = parent_pcs_ptr->picture_number % (1 << (parent_pcs_ptr->sequence_control_set_ptr->order_hint_bits_minus1 + 1));
+	for (uint8_t i = 0; i < 7; ++i)
+		parent_pcs_ptr->ref_order_hint[i] = ref_frame_arr_single[i].poc;
+#endif
 }
 #endif
 

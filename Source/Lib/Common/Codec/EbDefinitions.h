@@ -34,6 +34,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define COMPOUND_FLAG                      1// main flag for compound modes
+
+#if COMPOUND_FLAG
+#define COMP_MODE                       1// add compound modes
+#define	COMP_EC                         1
+
+#define	DIST_ONLY  0
+#endif
+
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
 
 #if ALT_REF_SUPPORT
@@ -592,6 +602,9 @@ typedef struct ConvolveParams
     int32_t use_jnt_comp_avg;
     int32_t fwd_offset;
     int32_t bck_offset;
+#if COMP_MODE
+	int use_dist_wtd_comp_avg;	
+#endif
 } ConvolveParams;
 
 // texture component type
@@ -1196,6 +1209,14 @@ typedef enum ATTRIBUTE_PACKED
 
 typedef enum
 {
+#if COMP_MODE
+	COMPOUND_AVERAGE,
+	COMPOUND_DISTWTD,
+	COMPOUND_WEDGE,
+	COMPOUND_DIFFWTD,
+	COMPOUND_TYPES,
+	MASKED_COMPOUND_TYPES = 2,
+#else
     COMPOUND_AVERAGE,
     COMPOUND_DISTWTD,
     COMPOUND_WEDGE,
@@ -1203,7 +1224,64 @@ typedef enum
     COMPOUND_INTRA,
     COMPOUND_TYPES = 3,
     MASKED_COMPOUND_TYPES = 2,
+#endif
 } CompoundType;
+
+#if COMP_MODE
+#define   COMPOUND_INTRA  4//just for the decoder
+
+
+//#define BLOCK_SIZES_ALL  BlockSizeS_ALL
+#define BLOCK_SIZE BlockSize
+#define MB_MODE_INFO  MbModeInfo
+#define MACROBLOCKD MacroBlockD
+#define MAX_WEDGE_TYPES (1 << 4)
+#define MAX_WEDGE_SIZE_LOG2 5  // 32x32
+#define MAX_WEDGE_SIZE (1 << MAX_WEDGE_SIZE_LOG2)
+#define MAX_WEDGE_SQUARE (MAX_WEDGE_SIZE * MAX_WEDGE_SIZE)
+#define WEDGE_WEIGHT_BITS 6
+#define WEDGE_NONE -1
+#define MASK_MASTER_SIZE ((MAX_WEDGE_SIZE) << 1)
+#define MASK_MASTER_STRIDE (MASK_MASTER_SIZE)
+typedef struct {
+	int enable_order_hint;           // 0 - disable order hint, and related tools
+	int order_hint_bits_minus_1;     // dist_wtd_comp, ref_frame_mvs,
+	int enable_dist_wtd_comp;        // 0 - disable dist-wtd compound modes
+	int enable_ref_frame_mvs;        // 0 - disable ref frame mvs
+} OrderHintInfoEnc;
+enum {
+	MD_COMP_AVG,
+	MD_COMP_DIST,
+	MD_COMP_DIFF0,
+	MD_COMP_DIFF1,
+	MD_COMP_WEDGE,
+	MD_COMP_TYPES,
+} UENUM1BYTE(MD_COMP_TYPE);
+
+#define COMPOUND_TYPE  CompoundType
+//enum {
+//    COMPOUND_AVERAGE,
+//    COMPOUND_DISTWTD,
+//    COMPOUND_WEDGE,
+//    COMPOUND_DIFFWTD,
+//	COMPOUND_TYPES,
+//    MASKED_COMPOUND_TYPES = 2,
+//} UENUM1BYTE(COMPOUND_TYPE);
+#define MAX_DIFFWTD_MASK_BITS 1
+enum {
+	DIFFWTD_38 = 0,
+	DIFFWTD_38_INV,
+	DIFFWTD_MASK_TYPES,
+} UENUM1BYTE(DIFFWTD_MASK_TYPE);
+typedef struct {
+	uint8_t *seg_mask;
+	int wedge_index;
+	int wedge_sign;
+	DIFFWTD_MASK_TYPE mask_type;
+	COMPOUND_TYPE type;
+} INTERINTER_COMPOUND_DATA;
+
+#endif
 
 typedef enum ATTRIBUTE_PACKED
 {

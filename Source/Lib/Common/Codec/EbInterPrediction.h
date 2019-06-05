@@ -37,6 +37,9 @@ extern "C" {
         uint8_t                                 ref_frame_type,
         MvUnit                               *mv_unit,
         uint8_t                                  use_intrabc,
+#if COMP_MODE
+		uint8_t                                compound_idx,
+#endif
         uint16_t                                pu_origin_x,
         uint16_t                                pu_origin_y,
         uint8_t                                 bwidth,

@@ -668,6 +668,23 @@ void* resource_coordination_kernel(void *input_ptr)
                 PM_MODE_2 :
                 PM_MODE_1;
 
+#if COMP_MODE			
+			sequence_control_set_ptr->order_hint_info_st.enable_order_hint = 1;
+			sequence_control_set_ptr->order_hint_info_st.order_hint_bits_minus_1 = 6;
+
+			if (sequence_control_set_ptr->static_config.enc_mode == ENC_M0)
+			//if(1)
+			{
+				sequence_control_set_ptr->order_hint_info_st.enable_dist_wtd_comp = 1; //DISTANCE
+				sequence_control_set_ptr->enable_masked_compound = 1; //DIFF+WEDGE
+				sequence_control_set_ptr->compound_types_to_try = MD_COMP_DIST;
+			}
+			else {
+				sequence_control_set_ptr->order_hint_info_st.enable_dist_wtd_comp = 0;  //these + inject only avg should give same m7 stream
+				sequence_control_set_ptr->enable_masked_compound = 0;
+				sequence_control_set_ptr->compound_types_to_try = MD_COMP_AVG;
+			}
+#endif
             // Construct PM Trans Coeff Shaping
             if (context_ptr->sequence_control_set_instance_array[instance_index]->encode_context_ptr->initial_picture) {
                 if (sequence_control_set_ptr->pm_mode == PM_MODE_0)

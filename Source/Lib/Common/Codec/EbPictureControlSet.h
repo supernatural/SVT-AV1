@@ -14021,6 +14021,10 @@ extern "C" {
         EbBool                                eos_coming;
         uint8_t                               picture_qp;
         uint64_t                              picture_number;
+#if COMP_MODE
+		uint32_t                             cur_order_hint;
+		uint32_t                             ref_order_hint[7];
+#endif
 #if BASE_LAYER_REF
         uint64_t                              last_islice_picture_number;
 #endif

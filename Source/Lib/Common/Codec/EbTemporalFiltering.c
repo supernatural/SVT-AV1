@@ -744,6 +744,9 @@ EbErrorType av1_inter_prediction(
     uint8_t                              ref_frame_type,
     MvUnit                               *mv_unit,
     uint8_t                              use_intrabc,
+#if COMP_MODE
+	uint8_t                                compound_idx,
+#endif
     uint16_t                             pu_origin_x,
     uint16_t                             pu_origin_y,
     uint8_t                              bwidth,
@@ -825,6 +828,9 @@ void tf_inter_prediction(
                     0,//ref_frame_type,
                     &mv_unit,
                     0,//use_intrabc,
+#if COMP_MODE
+					1,//1 for avg
+#endif
                     pu_origin_x,
                     pu_origin_y,
                     bsize,
