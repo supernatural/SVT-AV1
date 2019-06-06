@@ -9176,16 +9176,14 @@ EbErrorType motion_estimate_lcu(
         if (picture_control_set_ptr->enc_mode == ENC_M0){
             uint32_t pu_width  = partition_width[pu_index];
             uint32_t pu_height = partition_height[pu_index];
-            if (pu_width == 64 || pu_height == 64) {
+            if (pu_width == 64 || pu_height == 64) 
                 total_me_candidate_index = MIN(total_me_candidate_index, 7);
-            }else if (pu_width == 32 || pu_height == 32) {
+            else if (pu_width == 32 || pu_height == 32) 
                 total_me_candidate_index = MIN(total_me_candidate_index, 6);
-            }else if (pu_width == 16 || pu_height == 16) {
+            else if (pu_width == 16 || pu_height == 16) 
                 total_me_candidate_index = MIN(total_me_candidate_index, 5);
-            }
-            else {
+            else 
                 total_me_candidate_index = MIN(total_me_candidate_index, 4);
-            }
         }
 #endif
         mePuResult->total_me_candidate_index[pu_index] = total_me_candidate_index;
