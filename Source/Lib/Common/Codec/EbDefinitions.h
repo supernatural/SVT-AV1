@@ -58,31 +58,31 @@ extern "C" {
     1  // Missing inter candidates NEARETSEST/NEW, NEW/NEARETSEST, NEAR/NEW,
        // NEW/NEAR.
 
-#define ATB 1  // ATB Main Flag
+#define RDOQ_FP_QUANTIZATION              1 // Use FP quantization method if RDOQ ON and INTRA block and 8BIT (x86 WIP)
+#define FIXED_128x128_CONTEXT_UPDATE      1 // Fix txb_skip_context and dc_sign_context update for 128x128, and move txb_skip_context and dc_sign_context from CU to MD context 
+#define LOOP_FILTER_FIX                   1 // Use the existing loop filter multi-mode signal to control loop filter and removed the NRF checks @ Encode Pass and Loop Filter Processes 
+
+#define ATB                               1 // ATB Main Flag
 #if ATB
-#define ATB_SUPPORT 1  // Tranform block geometry, data structure(s), ..
-#define ATB_SUPPORT_1_DEPTH \
-    1               // Undo trasnform depth 2 as ATB for INTER not yet active
-#define ATB_EP 1    // Tranform partitioning @ encode passs
-#define ATB_EC 1    // Tranform partitioning @ entropy coding
-#define ATB_MD 1    // Tranform partitioning @ mode decision
-#define ATB_RATE 1  // Tranform partitioning tranform depth rate estimation
-#define ATB_TX_TYPE_SUPPORT_PER_TU \
-    1  // Added the ability to signal Tx type per tranform block
-#define ATB_DC_CONTEXT_SUPPORT_0 \
-    1  // Added the ability to signal DC context per tranform block
-#define ATB_DC_CONTEXT_SUPPORT_1 \
-    1  // Added the ability to signal DC level per tranform block
-#define ATB_DC_CONTEXT_SUPPORT_2 \
-    1  // Added the ability to update DC context @ tranform block basis for only
-       // INTRA partitioning (128x128 not yet addressed)
-#if ATB_DC_CONTEXT_SUPPORT_0 && ATB_DC_CONTEXT_SUPPORT_1 && \
-    ATB_DC_CONTEXT_SUPPORT_2
-#define DC_SIGN_CONTEXT_FIX \
-    1  // Fixed DC level derivation and update @ mode decision
+#define ATB_SUPPORT                       1 // Tranform block geometry, data structure(s), ..
+#define ATB_SUPPORT_1_DEPTH               1 // Undo trasnform depth 2 as ATB for INTER not yet active
+#define ATB_EP                            1 // Tranform partitioning @ encode passs
+#define ATB_EC                            1 // Tranform partitioning @ entropy coding
+#define ATB_MD                            1 // Tranform partitioning @ mode decision
+#define ATB_RATE                          1 // Tranform partitioning tranform depth rate estimation
+#define ATB_TX_TYPE_SUPPORT_PER_TU        1 // Added the ability to signal Tx type per tranform block
+#define ATB_DC_CONTEXT_SUPPORT_1          1 // Added the ability to signal DC level per tranform block
+#define ATB_DC_CONTEXT_SUPPORT_2          1 // Added the ability to update DC context @ tranform block basis for only INTRA partitioning (128x128 not yet addressed)
+#if ATB_DC_CONTEXT_SUPPORT_1 && ATB_DC_CONTEXT_SUPPORT_2
+#define DC_SIGN_CONTEXT_FIX               1 // Fixed DC level derivation and update @ mode decision
+
 #endif
 #define SHUT_ATB 0  // ATB multi-mode signal
 #endif
+
+#define CHROMA_SEARCH_FIX                 1 // Fix a few bugs related to Chroma search
+#define INTRA64_FIX                       1 // Fix a bug where 64x64 are disabled for sub 720P
+#define CHROMA_SEARCH_MR                  1 // Enable chroma search for all layers in MR mode
 /**********************************************************************************/
 
 // New  presets
@@ -195,14 +195,7 @@ extern "C" {
 #define PF_N2_SUPPORT 1
 #endif
 
-#define OPT_QUANT_COEFF 1
-#if OPT_QUANT_COEFF
-#define DEBUG_TRELLIS 0
-#define TRELLIS_SKIP 0
-#define TRELLIS_MD 1
-#define TRELLIS_CHROMA 0
-#define ENHANCED_TRELLIS 0  // TBD
-#endif
+#define TRELLIS_SKIP                                    0 // Kept as still under testing
 
 #define CHROMA_DC_ONLY 0
 #define SEARCH_UV_MODE 1
