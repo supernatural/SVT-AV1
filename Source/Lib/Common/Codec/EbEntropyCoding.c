@@ -344,8 +344,21 @@ void get_txb_ctx(
 
 #define MAX_TX_SIZE_UNIT 16
     static const int8_t signs[3] = { 0, -1, 1 };
+#if INCOMPLETE_SB_FIX
+    int32_t txb_w_unit;
+    int32_t txb_h_unit;
+    if (plane) {
+        txb_w_unit = MIN(tx_size_wide_unit[tx_size], (WIDTH / 2 - cu_origin_x) >> 2);
+        txb_h_unit = MIN(tx_size_high_unit[tx_size], (HEIGHT / 2 - cu_origin_y) >> 2);
+    }
+    else {
+        txb_w_unit = MIN(tx_size_wide_unit[tx_size], (WIDTH - cu_origin_x) >> 2);
+        txb_h_unit = MIN(tx_size_high_unit[tx_size], (HEIGHT - cu_origin_y) >> 2);
+    }
+#else
     const int32_t txb_w_unit = tx_size_wide_unit[tx_size];
     const int32_t txb_h_unit = tx_size_high_unit[tx_size];
+#endif
     int16_t dc_sign = 0;
     uint16_t k = 0;
 
@@ -6782,9 +6795,18 @@ EB_EXTERN EbErrorType write_sb(
         cu_origin_x = context_ptr->sb_origin_x + blk_geom->origin_x;
         cu_origin_y = context_ptr->sb_origin_y + blk_geom->origin_y;
         if (checkCuOutOfBound) {
+#if  INCOMPLETE_SB_FIX
+            if (blk_geom->shape != PART_N)
+                blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
+
+            codeCuCond = EB_FALSE;
+            if (((cu_origin_x + blk_geom->bwidth / 2 < sequence_control_set_ptr->seq_header.max_frame_width) || (cu_origin_y + blk_geom->bheight / 2 < sequence_control_set_ptr->seq_header.max_frame_height)) &&
+                cu_origin_x < sequence_control_set_ptr->seq_header.max_frame_width && cu_origin_y < sequence_control_set_ptr->seq_header.max_frame_height)
+#else
             codeCuCond = (EbBool)sb_geom->block_is_inside_md_scan[cu_index]; // check if cu is inside the picture
 
             if ((cu_origin_x < sequence_control_set_ptr->seq_header.max_frame_width) && (cu_origin_y < sequence_control_set_ptr->seq_header.max_frame_height))
+#endif
                 codeCuCond = EB_TRUE;
         }
 

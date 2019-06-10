@@ -3427,8 +3427,12 @@ EB_EXTERN void av1_encode_pass(
         UNUSED(blk_geom);
 
         sb_ptr->cu_partition_array[blk_it] = context_ptr->md_context->md_cu_arr_nsq[blk_it].part;
-
+#if  INCOMPLETE_SB_FIX
+        if (part != PARTITION_SPLIT && !((sequence_control_set_ptr->sb_params_array[tbAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
+            (sequence_control_set_ptr->sb_params_array[tbAddr].origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
+#else
         if (part != PARTITION_SPLIT) {
+#endif
             int32_t offset_d1 = ns_blk_offset[(int32_t)part]; //cu_ptr->best_d1_blk; // TOCKECK
             int32_t num_d1_block = ns_blk_num[(int32_t)part]; // context_ptr->blk_geom->totns; // TOCKECK
 
