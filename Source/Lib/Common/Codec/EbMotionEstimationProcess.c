@@ -295,9 +295,13 @@ EbErrorType signal_derivation_me_kernel_oq(
             context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
     else
 #endif
+#if M2_ME_SR_METHOD
+    context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
+#else
     context_ptr->me_context_ptr->me_search_method = (picture_control_set_ptr->enc_mode <= ENC_M1) ?
         FULL_SAD_SEARCH :
         SUB_SAD_SEARCH;
+#endif
 #else
 #if MOD_M0
     context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;

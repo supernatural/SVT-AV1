@@ -13741,11 +13741,13 @@ EbErrorType motion_estimate_lcu(
          picture_control_set_ptr->nsq_search_level < NSQ_SEARCH_FULL)
             ? EB_TRUE
             : EB_FALSE;
-
+#if M1_NSQ_TABLE
+    is_nsq_table_used =   is_nsq_table_used;  
+#else
 #if DISABLE_NSQ_TABLE_FOR_M0
     is_nsq_table_used = picture_control_set_ptr->enc_mode == ENC_M0 ?  EB_FALSE : is_nsq_table_used;      
 #endif
-
+#endif
 #if !MRP_ME
     referenceObject =
         (EbPaReferenceObject *)picture_control_set_ptr->ref_pa_pic_ptr_array[0]
@@ -15542,7 +15544,12 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
             picture_control_set_ptr->me_results[sb_index];
 
 #if CAPPED_ME_CANDIDATES_NUM
+#if M1_CAP_ME_CANDIDATES
+        if (0) {
+#else
         if (picture_control_set_ptr->enc_mode == ENC_M0) {
+
+#endif
             uint32_t pu_width = partition_width[pu_index];
             uint32_t pu_height = partition_height[pu_index];
             if (pu_width == 64 || pu_height == 64)

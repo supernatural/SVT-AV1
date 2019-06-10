@@ -1231,6 +1231,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->nfl_level = 7;
     else
 #endif
+#if M2_NFL
+        if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+            context_ptr->nfl_level = 2;
+        else
+            context_ptr->nfl_level = 4;
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
         if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
             context_ptr->nfl_level = (sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER) ? 0 : 1;
@@ -1253,6 +1259,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->nfl_level = 6;
         else
             context_ptr->nfl_level = 7;
+#endif
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
 #if MOD_M0
@@ -1313,6 +1320,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->chroma_level = CHROMA_MODE_0;
     else
 #endif
+#if M1_CHROMA
+        
+    context_ptr->chroma_level = CHROMA_MODE_1;
+#else
 #if SEARCH_UV_BASE
     if (picture_control_set_ptr->enc_mode == ENC_M0 && picture_control_set_ptr->temporal_layer_index == 0)
 #else
@@ -1327,7 +1338,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->chroma_level = (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT) ?
             CHROMA_MODE_2 :
             CHROMA_MODE_3 ;
-
+#endif
     // Set fast loop method
     // 1 fast loop: SSD_SEARCH not supported
     // Level                Settings
@@ -1422,18 +1433,27 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->global_mv_injection = 1;
     else
         context_ptr->global_mv_injection = 0;
+#if M1_NEARST_INJECT
+        context_ptr->new_nearest_near_comb_injection = 0;
 
+#else
 #if NEW_NEAREST_NEW_INJECTION
     if (picture_control_set_ptr->enc_mode == ENC_M0)
         context_ptr->new_nearest_near_comb_injection = 1;
     else
         context_ptr->new_nearest_near_comb_injection = 0;
 #endif
+#endif
+#if M1_4XN_NX4_INJECT
+
+        context_ptr->nx4_4xn_parent_mv_injection = 0;
+#else
 #if ENHANCED_Nx4_4xN_NEW_MV
     if (picture_control_set_ptr->enc_mode == ENC_M0)
         context_ptr->nx4_4xn_parent_mv_injection = 1;
     else
         context_ptr->nx4_4xn_parent_mv_injection = 0;
+#endif
 #endif
 #if M9_NEAR_INJECTION
     // Set NEAR injection
@@ -1485,12 +1505,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->unipred3x3_injection = 0;
     else
 #endif
+#if M2_3X3_UNI_INJECT
+        
+        context_ptr->unipred3x3_injection = 2;
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
         context_ptr->unipred3x3_injection = 1;
     else if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->unipred3x3_injection = 2;
     else
         context_ptr->unipred3x3_injection = 0;
+#endif
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
         context_ptr->unipred3x3_injection = 1;
@@ -1514,12 +1539,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->bipred3x3_injection = 0;
     else
 #endif
+#if M2_3X3_BI_INJECT
+        context_ptr->bipred3x3_injection = 2;
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
         context_ptr->bipred3x3_injection = 1;
     else if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->bipred3x3_injection = 2;
     else
         context_ptr->bipred3x3_injection = 0;
+#endif
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
         context_ptr->bipred3x3_injection = 1;
@@ -1599,10 +1628,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
     // Derive Trellis Quant Coeff Optimization Flag
+#if M1_TRELLIS_QUANT_COEFF
+        context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+#else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
         context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
     else
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+#endif
 
 #if NEW_PRESETS
     // Derive redundant block

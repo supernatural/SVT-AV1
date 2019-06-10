@@ -34,6 +34,32 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define M0_M1_CHROMA               0 // M0 - M1/M4 - OW
+#define M0_M1_NEARST_INJECT        0 // M0 - OW
+#define M0_M1_4XN_NX4_INJECT       0 // M0 - OW
+#define M0_M1_TRELLIS_QUANT_COEFF  0 // M0 - OW
+#define M0_M1_NSQ_TABLE            0 // M0 - OW
+#define M0_M1_CAP_ME_CANDIDATES    0 // M0 - OW
+#define M0_M1_LOOP_FILTER          0 // M0 -M1/M5 - OW
+#define M0_M1_INTRA_PRED           0 // M0 -M1 - OW*
+#define M0_M1_ATB                  0 // M0 - OW
+#define M0_M1_SUBPEL               0 // M0 - OW
+#define M0_M1_MRP                  0 // M0 - OW
+#define M0_M1_SB_SIZE              0 // M0 - OW NO 360P
+                                 
+#define M0_M2_NFL                  0 // M1/M2-M3/
+#define M0_M2_3X3_UNI_INJECT       0 //  M0-M1/M2-M4/OW
+#define M0_M2_3X3_BI_INJECT        0 //  M0-M1/M2-M4/OW
+#define M0_M2_ME_SR_METHOD         0 //  M0-M1/OW
+#define M0_M2_NSQ_LEVEL            0 //  M0-M1/OW
+#define M0_M2_IT_LEVEL             0 //  M0-M1/OW
+#define M0_M2_TX_W                 0 //  M0-M1/OW
+
+#define M0_M3_DEPTH                0 
+
+
+
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
 
 #if ALT_REF_SUPPORT

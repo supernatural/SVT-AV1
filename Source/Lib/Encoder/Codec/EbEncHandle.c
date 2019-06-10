@@ -2200,7 +2200,12 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
         sequence_control_set_ptr,
         sequence_control_set_ptr->seq_header.max_frame_width*sequence_control_set_ptr->seq_header.max_frame_height);
 #if NEW_PRESETS
+#if M1_SB_SIZE
+    sequence_control_set_ptr->static_config.super_block_size       =  64;
+
+#else
     sequence_control_set_ptr->static_config.super_block_size       = (sequence_control_set_ptr->static_config.enc_mode == ENC_M0 && sequence_control_set_ptr->input_resolution >= INPUT_SIZE_1080i_RANGE) ? 128 : 64;
+#endif
 #else
     sequence_control_set_ptr->static_config.super_block_size       = (sequence_control_set_ptr->static_config.enc_mode <= ENC_M1 && sequence_control_set_ptr->input_resolution >= INPUT_SIZE_1080i_RANGE) ? 128 : 64;
 #endif
@@ -2218,7 +2223,12 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
 #if MEMORY_FOOTPRINT_OPT_ME_MV
     //0: MRP Mode 0 (4,3)
     //1: MRP Mode 1 (2,2)
+#if M1_MRP
+    sequence_control_set_ptr->mrp_mode = (uint8_t)  1;
+#else
     sequence_control_set_ptr->mrp_mode = (uint8_t) (sequence_control_set_ptr->static_config.enc_mode == ENC_M0) ? 0 : 1;
+
+#endif
 
     //0: ON
     //1: OFF
