@@ -2122,6 +2122,9 @@ void SetDefaultConfigurationParameters(
     sequence_control_set_ptr->cropping_top_offset = 0;
     sequence_control_set_ptr->cropping_bottom_offset = 0;
 
+    //Segmentation
+    sequence_control_set_ptr->static_config.enable_adaptive_quantization = 0;
+
     return;
 }
 
@@ -2210,6 +2213,7 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
 #endif
 #if ALT_REF_OVERLAY
     sequence_control_set_ptr->static_config.enable_overlays = sequence_control_set_ptr->static_config.enable_altrefs == EB_FALSE ||
+        (sequence_control_set_ptr->static_config.altref_nframes <= 1) ||
         (sequence_control_set_ptr->static_config.rate_control_mode > 0) ||
         sequence_control_set_ptr->static_config.encoder_bit_depth != EB_8BIT ?
         0 : sequence_control_set_ptr->static_config.enable_overlays;
@@ -2368,6 +2372,10 @@ void CopyApiFromApp(
     sequence_control_set_ptr->static_config.min_qp_allowed = (sequence_control_set_ptr->static_config.rate_control_mode) ?
         ((EbSvtAv1EncConfiguration*)pComponentParameterStructure)->min_qp_allowed :
         1; // lossless coding not supported
+
+    //Segmentation
+    //TODO: check RC mode and set only when RC is enabled in the final version.
+    sequence_control_set_ptr->static_config.enable_adaptive_quantization = pComponentParameterStructure->enable_adaptive_quantization;
 
     // Misc
     sequence_control_set_ptr->static_config.encoder_bit_depth = ((EbSvtAv1EncConfiguration*)pComponentParameterStructure)->encoder_bit_depth;
@@ -2712,6 +2720,11 @@ static EbErrorType VerifySettings(
         return_error = EB_ErrorBadParameter;
     }
 
+    if (config->stat_report > 1) {
+        SVT_LOG("Error instance %u : Invalid StatReport. StatReport must be [0 - 1]\n", channelNumber + 1);
+        return_error = EB_ErrorBadParameter;
+    }    
+
     if (config->high_dynamic_range_input > 1) {
         SVT_LOG("Error instance %u : Invalid HighDynamicRangeInput. HighDynamicRangeInput must be [0 - 1]\n", channelNumber + 1);
         return_error = EB_ErrorBadParameter;
@@ -2719,6 +2732,11 @@ static EbErrorType VerifySettings(
 
     if (config->screen_content_mode > 2) {
         SVT_LOG("Error instance %u : Invalid screen_content_mode. screen_content_mode must be [0 - 2]\n", channelNumber + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+
+    if(sequence_control_set_ptr->static_config.enable_adaptive_quantization>1){
+        SVT_LOG("Error instance %u : Invalid enable_adaptive_quantization. enable_adaptive_quantization must be [0/1]\n", channelNumber + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -2768,6 +2786,17 @@ static EbErrorType VerifySettings(
 
     if (config->target_socket != -1 && config->target_socket != 0 && config->target_socket != 1) {
         SVT_LOG("Error instance %u: Invalid target_socket. target_socket must be [-1 - 1] \n", channelNumber + 1);
+        return_error = EB_ErrorBadParameter;
+    }
+
+    // alt-ref frames related
+    if (config->altref_strength > ALTREF_MAX_STRENGTH ) {
+        SVT_LOG("Error instance %u: invalid altref-strength, should be in the range [0 - %d] \n", channelNumber + 1, ALTREF_MAX_STRENGTH);
+        return_error = EB_ErrorBadParameter;
+    }
+
+    if (config->altref_nframes > ALTREF_MAX_NFRAMES ) {
+        SVT_LOG("Error instance %u: invalid altref-nframes, should be in the range [0 - %d] \n", channelNumber + 1, ALTREF_MAX_NFRAMES);
         return_error = EB_ErrorBadParameter;
     }
 
