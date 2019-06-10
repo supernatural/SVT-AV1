@@ -4320,6 +4320,12 @@ void AV1PerformFullLoop(
 #endif
 #if ATB_MD
         uint8_t end_tx_depth = get_end_tx_depth(context_ptr, picture_control_set_ptr->parent_pcs_ptr->atb_mode, candidate_ptr, context_ptr->blk_geom->bsize, candidateBuffer->candidate_ptr->type);
+#if INCOMPLETE_SB_FIX
+        if ((picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_params_array[sb_ptr->index].origin_x + context_ptr->blk_geom->origin_x + context_ptr->blk_geom->bwidth > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_width) ||
+            (picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_params_array[sb_ptr->index].origin_y + context_ptr->blk_geom->origin_y + context_ptr->blk_geom->bheight > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_height))
+            end_tx_depth = 0;
+
+#endif        
         // Transform partitioning path (INTRA Luma)
         if (picture_control_set_ptr->parent_pcs_ptr->atb_mode && end_tx_depth && candidateBuffer->candidate_ptr->type == INTRA_MODE && candidateBuffer->candidate_ptr->use_intrabc == 0) {
             perform_intra_tx_partitioning(
@@ -6303,6 +6309,47 @@ EB_EXTERN EbErrorType mode_decision_sb(
         // Initialize tx_depth
         cu_ptr->tx_depth = 0;
 #endif
+#if  INCOMPLETE_SB_FIX
+        if (!((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
+            (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
+            md_encode_block(
+                sequence_control_set_ptr,
+                picture_control_set_ptr,
+                context_ptr,
+                ss_mecontext,
+#if M8_SKIP_BLK
+                &skip_sub_blocks,
+#else
+                0xFFFFFFFF,
+#endif
+                lcuAddr,
+                bestCandidateBuffers);
+            //  if (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y >= HEIGHT && blk_geom->bwidth == 64 && picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index > 0)
+            //      context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0;
+              //else if ((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth  > sequence_control_set_ptr->seq_header.max_frame_width) ||
+              //    (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight  > sequence_control_set_ptr->seq_header.max_frame_height))
+              //    context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0xfffffffff;
+        }
+        else {
+            //            context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0;// 0xffffffff;
+            if (context_ptr->blk_geom->shape != PART_N)
+                context_ptr->md_local_cu_unit[context_ptr->cu_ptr->mds_idx].cost = 0xffffffff;
+            else
+                context_ptr->md_local_cu_unit[context_ptr->cu_ptr->mds_idx].cost = 0;// 0xffffffff;
+
+ /*           printf("SKIPED:%d\t%d\t%d\t%d\n",
+                sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x,
+                sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y,
+                blk_geom->bwidth,
+                blk_geom->bheight);*/
+
+        }
+        //if (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y >= 320 && blk_geom->bwidth == 64 && picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index == 0)
+        //    context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0;// context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost / 10;
+        //else if ((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth > sequence_control_set_ptr->seq_header.max_frame_width) ||
+        //    (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight > sequence_control_set_ptr->seq_header.max_frame_height))
+        //    context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0xfffffffff;
+#else
         md_encode_block(
             sequence_control_set_ptr,
             picture_control_set_ptr,
@@ -6315,7 +6362,7 @@ EB_EXTERN EbErrorType mode_decision_sb(
 #endif
             lcuAddr,
             bestCandidateBuffers);
-
+#endif
         if (blk_geom->nsi + 1 == blk_geom->totns)
             d1_non_square_block_decision(context_ptr);
 
