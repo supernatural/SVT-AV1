@@ -35,6 +35,11 @@
 extern "C" {
 #endif
 
+
+#define MRP_L432_OFF            0
+#define MRP_L43_OFF             0
+#define CAPPED_ME_6543          0
+
 #define M1_CHROMA               0 // M0 - M1/M4 - OW
 #define M1_NEARST_INJECT        0 // M0 - OW
 #define M1_4XN_NX4_INJECT       0 // M0 - OW
