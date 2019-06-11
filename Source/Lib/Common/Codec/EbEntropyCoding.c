@@ -327,6 +327,9 @@ static INLINE int16_t GetBrCtx(
 }
 
 void get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+    SequenceControlSet *sequence_control_set_ptr,
+#endif
     const int32_t        plane,
     NeighborArrayUnit   *dc_sign_level_coeff_neighbor_array,
     uint32_t             cu_origin_x,
@@ -348,12 +351,12 @@ void get_txb_ctx(
     int32_t txb_w_unit;
     int32_t txb_h_unit;
     if (plane) {
-        txb_w_unit = MIN(tx_size_wide_unit[tx_size], (WIDTH / 2 - cu_origin_x) >> 2);
-        txb_h_unit = MIN(tx_size_high_unit[tx_size], (HEIGHT / 2 - cu_origin_y) >> 2);
+        txb_w_unit = MIN(tx_size_wide_unit[tx_size], (sequence_control_set_ptr->seq_header.max_frame_width / 2 - cu_origin_x) >> 2);
+        txb_h_unit = MIN(tx_size_high_unit[tx_size], (sequence_control_set_ptr->seq_header.max_frame_height / 2 - cu_origin_y) >> 2);
     }
     else {
-        txb_w_unit = MIN(tx_size_wide_unit[tx_size], (WIDTH - cu_origin_x) >> 2);
-        txb_h_unit = MIN(tx_size_high_unit[tx_size], (HEIGHT - cu_origin_y) >> 2);
+        txb_w_unit = MIN(tx_size_wide_unit[tx_size], (sequence_control_set_ptr->seq_header.max_frame_width - cu_origin_x) >> 2);
+        txb_h_unit = MIN(tx_size_high_unit[tx_size], (sequence_control_set_ptr->seq_header.max_frame_height - cu_origin_y) >> 2);
     }
 #else
     const int32_t txb_w_unit = tx_size_wide_unit[tx_size];
@@ -719,6 +722,9 @@ static EbErrorType av1_encode_tx_coef_y(
             int16_t dcSignCtx = 0;
 
             get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                pcs_ptr->parent_pcs_ptr->sequence_control_set_ptr,
+#endif
                 COMPONENT_LUMA,
                 luma_dc_sign_level_coeff_neighbor_array,
                 cu_origin_x + blk_geom->tx_org_x[tx_depth][txb_itr] - blk_geom->origin_x,
@@ -811,6 +817,9 @@ static EbErrorType av1_encode_tx_coef_uv(
                 int16_t dcSignCtx = 0;
 
                 get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                    pcs_ptr->parent_pcs_ptr->sequence_control_set_ptr,
+#endif
                     COMPONENT_CHROMA,
                     cb_dc_sign_level_coeff_neighbor_array,
                     ROUND_UV(cu_origin_x + blk_geom->tx_org_x[tx_depth][txb_itr] - blk_geom->origin_x) >> 1,
@@ -845,6 +854,9 @@ static EbErrorType av1_encode_tx_coef_uv(
                 int16_t dcSignCtx = 0;
 
                 get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                    pcs_ptr->parent_pcs_ptr->sequence_control_set_ptr,
+#endif
                     COMPONENT_CHROMA,
                     cr_dc_sign_level_coeff_neighbor_array,
                     ROUND_UV(cu_origin_x + blk_geom->tx_org_x[tx_depth][txb_itr] - blk_geom->origin_x) >> 1,
@@ -977,6 +989,9 @@ static EbErrorType Av1EncodeCoeff1D(
                 int16_t dcSignCtx = 0;
 
                 get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                    pcs_ptr->parent_pcs_ptr->sequence_control_set_ptr,
+#endif
                     COMPONENT_LUMA,
                     luma_dc_sign_level_coeff_neighbor_array,
                     cu_origin_x + blk_geom->tx_org_x[cu_ptr->tx_depth][txb_itr] - blk_geom->origin_x,
@@ -1012,6 +1027,9 @@ static EbErrorType Av1EncodeCoeff1D(
                     int16_t dcSignCtx = 0;
 
                     get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                        pcs_ptr->parent_pcs_ptr->sequence_control_set_ptr,
+#endif
                         COMPONENT_CHROMA,
                         cb_dc_sign_level_coeff_neighbor_array,
                         ROUND_UV(cu_origin_x + blk_geom->tx_org_x[cu_ptr->tx_depth][txb_itr] - blk_geom->origin_x) >> 1,
@@ -1046,6 +1064,9 @@ static EbErrorType Av1EncodeCoeff1D(
                     int16_t dcSignCtx = 0;
 
                     get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                        pcs_ptr->parent_pcs_ptr->sequence_control_set_ptr,
+#endif
                         COMPONENT_CHROMA,
                         cr_dc_sign_level_coeff_neighbor_array,
                         ROUND_UV(cu_origin_x + blk_geom->tx_org_x[cu_ptr->tx_depth][txb_itr] - blk_geom->origin_x) >> 1,

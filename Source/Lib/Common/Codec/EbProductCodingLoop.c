@@ -3427,6 +3427,9 @@ void perform_intra_tx_partitioning(
             context_ptr->luma_txb_skip_context = 0;
             context_ptr->luma_dc_sign_context = 0;
             get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                sequence_control_set_ptr,
+#endif
                 COMPONENT_LUMA,
                 context_ptr->tx_search_luma_dc_sign_level_coeff_neighbor_array,
                 context_ptr->sb_origin_x + tx_org_x,
@@ -3925,6 +3928,9 @@ void perform_intra_tx_partitioning(
             context_ptr->luma_txb_skip_context = 0;
             context_ptr->luma_dc_sign_context = 0;
             get_txb_ctx(
+#if INCOMPLETE_SB_FIX
+                sequence_control_set_ptr,
+#endif
                 COMPONENT_LUMA,
                 picture_control_set_ptr->md_luma_dc_sign_level_coeff_neighbor_array[MD_NEIGHBOR_ARRAY_INDEX],
                 context_ptr->sb_origin_x + tx_org_x,
