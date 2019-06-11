@@ -4327,8 +4327,8 @@ void AV1PerformFullLoop(
 #if ATB_MD
         uint8_t end_tx_depth = get_end_tx_depth(context_ptr, picture_control_set_ptr->parent_pcs_ptr->atb_mode, candidate_ptr, context_ptr->blk_geom->bsize, candidateBuffer->candidate_ptr->type);
 #if INCOMPLETE_SB_FIX
-        if ((picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_params_array[sb_ptr->index].origin_x + context_ptr->blk_geom->origin_x + context_ptr->blk_geom->bwidth > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_width) ||
-            (picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_params_array[sb_ptr->index].origin_y + context_ptr->blk_geom->origin_y + context_ptr->blk_geom->bheight > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_height))
+        if (context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x + context_ptr->blk_geom->bwidth > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_width ||
+            context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y + context_ptr->blk_geom->bheight > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_height)
             end_tx_depth = 0;
 
 #endif        
@@ -6316,8 +6316,10 @@ EB_EXTERN EbErrorType mode_decision_sb(
         cu_ptr->tx_depth = 0;
 #endif
 #if  INCOMPLETE_SB_FIX
-        if (!((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
-            (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
+        if (!((context_ptr->sb_origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
+            (context_ptr->sb_origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
+       //     if (!((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
+       //         (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
             md_encode_block(
                 sequence_control_set_ptr,
                 picture_control_set_ptr,
