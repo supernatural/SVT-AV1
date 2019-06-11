@@ -55,6 +55,8 @@ extern "C" {
 #define M0_M2_NSQ_LEVEL            0 //  M0-M1/OW
 #define M0_M2_IT_LEVEL             0 //  M0-M1/OW
 #define M0_M2_TX_W                 0 //  M0-M1/OW
+#define M2_TX_RS                0 // M1/M2-M3/
+#define M2_INTRA                0 // M1/M2-M3/
 
 #define M0_M3_DEPTH                0 
 

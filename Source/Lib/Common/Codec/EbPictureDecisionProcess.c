@@ -1398,6 +1398,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set tx search reduced set falg (0: full tx set; 1: reduced tx set; 1: two tx))
 #if NEW_PRESETS
+#if M2_TX_RS
+            if (picture_control_set_ptr->is_used_as_reference_flag)
+            picture_control_set_ptr->tx_search_reduced_set = 0;
+        else
+            picture_control_set_ptr->tx_search_reduced_set = 1;
+#else
 #if SCREEN_CONTENT_SETTINGS
     if (sc_content_detected)
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
@@ -1425,6 +1431,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->tx_search_reduced_set = 1;
     else
         picture_control_set_ptr->tx_search_reduced_set = 1;
+#endif
 #else
     if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
         picture_control_set_ptr->tx_search_reduced_set = 0;
@@ -1490,7 +1497,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else {
 #if NEW_PRESETS
-#if M1_INTRA_PRED
+#if M2_INTRA
+            if (picture_control_set_ptr->temporal_layer_index == 0)
+                picture_control_set_ptr->intra_pred_mode = 1;
+            else
+                picture_control_set_ptr->intra_pred_mode = 3;
+#elif M1_INTRA_PRED
     if (picture_control_set_ptr->temporal_layer_index == 0)
         picture_control_set_ptr->intra_pred_mode = 1;
     else
