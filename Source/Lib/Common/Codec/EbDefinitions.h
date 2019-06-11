@@ -49,6 +49,8 @@ extern "C" {
 #define DOWN_SAMPLING_FILTERING           1 // Use down-sampling filtering (instead of down-sampling decimation) for 1/16th and 1/4th reference frame(s) generation @ ME and temporal filtering search, added the multi-mode signal down_sampling_method_me_search; filtering if M0, and decimation for M1 & higher
 #define DECIMATION_BUG_FIX                1 // Removed HME Level0 check @ 1/16th decimation to guarantee valid ZZ SAD and SCD data when HME Level0 is OFF  
 
+#define ADP_BQ                            0 // Added the ability to perform ADP for best quality mode
+
 #define RDOQ_INTRA                        1 // Enable RDOQ INTRA (RDOQ INTER already active) 
 #define DC_SIGN_CONTEXT_EP                1 // Fixed DC level derivation & update @ encode pass
 #define SPATIAL_SSE_TX_SEARCH             1 // Spatial SSE @ the full loop Tx search
@@ -3219,13 +3221,18 @@ typedef enum EbCu8x8Mode
 
 typedef enum EbPictureDepthMode
 {
-    PIC_ALL_DEPTH_MODE          = 0, // ALL sq and nsq:  SB size -> 4x4
-    PIC_ALL_C_DEPTH_MODE        = 1, // ALL sq and nsq with control :  SB size -> 4x4
-    PIC_SQ_DEPTH_MODE           = 2, // ALL sq:  SB size -> 4x4
-    PIC_SQ_NON4_DEPTH_MODE      = 3, // SQ:  SB size -> 8x8
+    PIC_ALL_DEPTH_MODE           = 0, // ALL sq and nsq:  SB size -> 4x4
+    PIC_ALL_C_DEPTH_MODE         = 1, // ALL sq and nsq with control :  SB size -> 4x4
+    PIC_SQ_DEPTH_MODE            = 2, // ALL sq:  SB size -> 4x4
+    PIC_SQ_NON4_DEPTH_MODE       = 3, // SQ:  SB size -> 8x8
 #if OPT_LOSSLESS_0
-    PIC_OPEN_LOOP_DEPTH_MODE = 4, // Early Inter Depth Decision:  SB size -> 8x8
-    PIC_SB_SWITCH_DEPTH_MODE = 5  // Adaptive Depth Partitioning
+    PIC_OPEN_LOOP_DEPTH_MODE     = 4, // Early Inter Depth Decision:  SB size -> 8x8
+#if ADP_BQ
+    PIC_SB_SWITCH_SQ_DEPTH_MODE  = 5, // Adaptive Depth Partitioning SQ   
+    PIC_SB_SWITCH_NSQ_DEPTH_MODE = 6  // Adaptive Depth Partitioning NSQ 
+#else
+    PIC_SB_SWITCH_DEPTH_MODE    = 5  // Adaptive Depth Partitioning
+#endif
 #else
     PIC_BDP_DEPTH_MODE          = 4,
     PIC_LIGHT_BDP_DEPTH_MODE    = 5,
@@ -3235,12 +3242,20 @@ typedef enum EbPictureDepthMode
 } EbPictureDepthMode;
 
 #define EB_SB_DEPTH_MODE              uint8_t
+#if ADP_BQ
+#define SB_ALL_BLOCKS_DEPTH_MODE            0
 #define SB_SQ_BLOCKS_DEPTH_MODE             1
 #define SB_SQ_NON4_BLOCKS_DEPTH_MODE        2
 #define SB_OPEN_LOOP_DEPTH_MODE             3
 #define SB_FAST_OPEN_LOOP_DEPTH_MODE        4
 #define SB_PRED_OPEN_LOOP_DEPTH_MODE        5
-
+#else
+#define SB_SQ_BLOCKS_DEPTH_MODE             1
+#define SB_SQ_NON4_BLOCKS_DEPTH_MODE        2
+#define SB_OPEN_LOOP_DEPTH_MODE             3
+#define SB_FAST_OPEN_LOOP_DEPTH_MODE        4
+#define SB_PRED_OPEN_LOOP_DEPTH_MODE        5
+#endif
 typedef enum EbIntrA4x4SearchMethod
 {
     INTRA4x4_OFF = 0,

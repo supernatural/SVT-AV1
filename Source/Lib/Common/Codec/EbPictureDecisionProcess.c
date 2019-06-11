@@ -885,7 +885,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 #endif
         if (picture_control_set_ptr->enc_mode <= ENC_M2)
+#if ADP_BQ
+            if (picture_control_set_ptr->slice_type == I_SLICE)
+                picture_control_set_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
+            else
+                picture_control_set_ptr->pic_depth_mode = PIC_SB_SWITCH_NSQ_DEPTH_MODE;
+#else
             picture_control_set_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
+#endif
         else if (picture_control_set_ptr->enc_mode <= ENC_M3)
             if (picture_control_set_ptr->slice_type == I_SLICE)
                 picture_control_set_ptr->pic_depth_mode = PIC_ALL_C_DEPTH_MODE;
@@ -897,7 +904,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (picture_control_set_ptr->slice_type == I_SLICE)
                 picture_control_set_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
             else
+#if ADP_BQ
+                picture_control_set_ptr->pic_depth_mode = PIC_SB_SWITCH_SQ_DEPTH_MODE;
+#else
                 picture_control_set_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
+#endif
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M2)
             picture_control_set_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
@@ -926,17 +937,29 @@ EbErrorType signal_derivation_multi_processes_oq(
             assert(sequence_control_set_ptr->nsq_present == 1 && "use nsq_present 1");
 #endif
 
+#if ADP_BQ
+    picture_control_set_ptr->max_number_of_pus_per_sb = (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) ? MAX_ME_PU_COUNT : SQUARE_PU_COUNT;
+#else
     picture_control_set_ptr->max_number_of_pus_per_sb = (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) ? MAX_ME_PU_COUNT : SQUARE_PU_COUNT;
+#endif
 
-    // NSQ search Level                               Settings
-    // NSQ_SEARCH_OFF                                 OFF
-    // NSQ_SEARCH_LEVEL1                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 1 NSQ SHAPE
-    // NSQ_SEARCH_LEVEL2                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 2 NSQ SHAPE
-    // NSQ_SEARCH_LEVEL3                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 3 NSQ SHAPE
-    // NSQ_SEARCH_LEVEL4                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 4 NSQ SHAPE
-    // NSQ_SEARCH_LEVEL5                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 5 NSQ SHAPE
-    // NSQ_SEARCH_LEVEL6                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 6 NSQ SHAPE
-    // NSQ_SEARCH_FULL                                Allow NSQ Intra-FULL and Inter-FULL
+#if ADP_BQ
+    // Set nsq_search_level and nsq_max_shapes_md to invalid if ADP
+    if (picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_SQ_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+        picture_control_set_ptr->nsq_search_level = ~0;
+        picture_control_set_ptr->nsq_max_shapes_md = ~0;
+    }
+    else {
+#endif
+        // NSQ search Level                               Settings
+        // NSQ_SEARCH_OFF                                 OFF
+        // NSQ_SEARCH_LEVEL1                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 1 NSQ SHAPE
+        // NSQ_SEARCH_LEVEL2                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 2 NSQ SHAPE
+        // NSQ_SEARCH_LEVEL3                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 3 NSQ SHAPE
+        // NSQ_SEARCH_LEVEL4                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 4 NSQ SHAPE
+        // NSQ_SEARCH_LEVEL5                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 5 NSQ SHAPE
+        // NSQ_SEARCH_LEVEL6                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 6 NSQ SHAPE
+        // NSQ_SEARCH_FULL                                Allow NSQ Intra-FULL and Inter-FULL
 
 #if NEW_PRESETS
         if (MR_MODE)
@@ -960,7 +983,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 else
                     picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
             else
-                    picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
 
 #endif
         else if (picture_control_set_ptr->enc_mode <= ENC_M1)
@@ -973,76 +996,82 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
 #else
-    if (MR_MODE)
-        picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_FULL;
-    else if (picture_control_set_ptr->enc_mode == ENC_M0)
-        picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
-    else if (picture_control_set_ptr->enc_mode <= ENC_M1)
-        if (picture_control_set_ptr->is_used_as_reference_flag)
-            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL5;
-        else
-            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL3;
-    else if (picture_control_set_ptr->enc_mode <= ENC_M2)
-        if (picture_control_set_ptr->is_used_as_reference_flag)
-            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL5;
-        else
-            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL1;
-    else if (picture_control_set_ptr->enc_mode <= ENC_M3)
-        if (picture_control_set_ptr->temporal_layer_index == 0)
-            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL5;
-        else
-            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
-    else if (picture_control_set_ptr->enc_mode <= ENC_M4)
-        if (picture_control_set_ptr->slice_type == I_SLICE)
+        if (MR_MODE)
+            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_FULL;
+        else if (picture_control_set_ptr->enc_mode == ENC_M0)
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+        else if (picture_control_set_ptr->enc_mode <= ENC_M1)
+            if (picture_control_set_ptr->is_used_as_reference_flag)
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL5;
+            else
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL3;
+        else if (picture_control_set_ptr->enc_mode <= ENC_M2)
+            if (picture_control_set_ptr->is_used_as_reference_flag)
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL5;
+            else
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL1;
+        else if (picture_control_set_ptr->enc_mode <= ENC_M3)
+            if (picture_control_set_ptr->temporal_layer_index == 0)
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL5;
+            else
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
+        else if (picture_control_set_ptr->enc_mode <= ENC_M4)
+            if (picture_control_set_ptr->slice_type == I_SLICE)
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+            else
+                picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
         else
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
-    else
-        picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
 #endif
 
 #if MEMORY_FOOTPRINT_OPT_ME_MV
-    if (picture_control_set_ptr->nsq_search_level > NSQ_SEARCH_OFF)
-        assert(sequence_control_set_ptr->nsq_present == 1 && "use nsq_present 1");
+        if (picture_control_set_ptr->nsq_search_level > NSQ_SEARCH_OFF)
+            assert(sequence_control_set_ptr->nsq_present == 1 && "use nsq_present 1");
 #endif
 
 #if  RED_CU_DEBUG
-    picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_FULL;
+        picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_FULL;
 #endif
-    switch (picture_control_set_ptr->nsq_search_level) {
-    case NSQ_SEARCH_OFF:
-        picture_control_set_ptr->nsq_max_shapes_md = 0;
-        break;
-    case NSQ_SEARCH_LEVEL1:
-        picture_control_set_ptr->nsq_max_shapes_md = 1;
-        break;
-    case NSQ_SEARCH_LEVEL2:
-        picture_control_set_ptr->nsq_max_shapes_md = 2;
-        break;
-    case NSQ_SEARCH_LEVEL3:
-        picture_control_set_ptr->nsq_max_shapes_md = 3;
-        break;
-    case NSQ_SEARCH_LEVEL4:
-        picture_control_set_ptr->nsq_max_shapes_md = 4;
-        break;
-    case NSQ_SEARCH_LEVEL5:
-        picture_control_set_ptr->nsq_max_shapes_md = 5;
-        break;
-    case NSQ_SEARCH_LEVEL6:
-        picture_control_set_ptr->nsq_max_shapes_md = 6;
-        break;
-    case NSQ_SEARCH_FULL:
-        picture_control_set_ptr->nsq_max_shapes_md = 6;
-        break;
-    default:
-        printf("nsq_search_level is not supported\n");
-        break;
-    }
+        switch (picture_control_set_ptr->nsq_search_level) {
+        case NSQ_SEARCH_OFF:
+            picture_control_set_ptr->nsq_max_shapes_md = 0;
+            break;
+        case NSQ_SEARCH_LEVEL1:
+            picture_control_set_ptr->nsq_max_shapes_md = 1;
+            break;
+        case NSQ_SEARCH_LEVEL2:
+            picture_control_set_ptr->nsq_max_shapes_md = 2;
+            break;
+        case NSQ_SEARCH_LEVEL3:
+            picture_control_set_ptr->nsq_max_shapes_md = 3;
+            break;
+        case NSQ_SEARCH_LEVEL4:
+            picture_control_set_ptr->nsq_max_shapes_md = 4;
+            break;
+        case NSQ_SEARCH_LEVEL5:
+            picture_control_set_ptr->nsq_max_shapes_md = 5;
+            break;
+        case NSQ_SEARCH_LEVEL6:
+            picture_control_set_ptr->nsq_max_shapes_md = 6;
+            break;
+        case NSQ_SEARCH_FULL:
+            picture_control_set_ptr->nsq_max_shapes_md = 6;
+            break;
+        default:
+            printf("nsq_search_level is not supported\n");
+            break;
+        }
 
-    if (picture_control_set_ptr->nsq_search_level == NSQ_SEARCH_OFF)
-        if (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) picture_control_set_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;
-    if (picture_control_set_ptr->pic_depth_mode > PIC_SQ_DEPTH_MODE)
-        assert(picture_control_set_ptr->nsq_search_level == NSQ_SEARCH_OFF);
+        if (picture_control_set_ptr->nsq_search_level == NSQ_SEARCH_OFF)
+            if (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)
+                picture_control_set_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;
+
+        if (picture_control_set_ptr->pic_depth_mode > PIC_SQ_DEPTH_MODE)
+            assert(picture_control_set_ptr->nsq_search_level == NSQ_SEARCH_OFF);
+
+#if ADP_BQ
+    }
+#endif
     // Interpolation search Level                     Settings
     // 0                                              OFF
     // 1                                              Interpolation search at inter-depth

@@ -977,8 +977,9 @@ void forward_all_blocks_to_md(
             blk_index++;
         }
     }
-
+#if !ADP_BQ
     picture_control_set_ptr->parent_pcs_ptr->average_qp = (uint8_t)picture_control_set_ptr->parent_pcs_ptr->picture_qp;
+#endif
 }
 
 void forward_sq_blocks_to_md(
@@ -1029,14 +1030,15 @@ void forward_sq_blocks_to_md(
             blk_index += split_flag ? d1_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] : ns_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
         }
     }
-
+#if !ADP_BQ
     picture_control_set_ptr->parent_pcs_ptr->average_qp = (uint8_t)picture_control_set_ptr->parent_pcs_ptr->picture_qp;
+#endif
 }
 
 void sb_forward_sq_blocks_to_md(
     SequenceControlSet *sequence_control_set_ptr,
     PictureControlSet  *picture_control_set_ptr,
-    uint32_t              sb_index)
+    uint32_t            sb_index)
 {
     EbBool   split_flag;
     MdcLcuData *resultsPtr = &picture_control_set_ptr->mdc_sb_array[sb_index];
@@ -1067,9 +1069,61 @@ void sb_forward_sq_blocks_to_md(
         }
         blk_index += split_flag ? d1_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] : ns_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
+#if !ADP_BQ
     picture_control_set_ptr->parent_pcs_ptr->average_qp = (uint8_t)picture_control_set_ptr->parent_pcs_ptr->picture_qp;
+#endif
 }
 
+#if ADP_BQ
+void sb_forward_all_blocks_to_md(
+    SequenceControlSet *sequence_control_set_ptr,
+    PictureControlSet  *picture_control_set_ptr,
+    uint32_t            sb_index)
+{
+
+    EbBool split_flag;
+
+    MdcLcuData *resultsPtr = &picture_control_set_ptr->mdc_sb_array[sb_index];
+
+    resultsPtr->leaf_count = 0;
+
+    uint32_t  blk_index = 0;
+
+    while (blk_index < sequence_control_set_ptr->max_block_cnt)
+    {
+        split_flag = EB_TRUE;
+
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+
+        //if the parentSq is inside inject this block
+        uint8_t is_blk_allowed = picture_control_set_ptr->slice_type != I_SLICE ? 1 : (blk_geom->sq_size < 128) ? 1 : 0;
+
+        if (sequence_control_set_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed)
+
+        {
+            resultsPtr->leaf_data_array[resultsPtr->leaf_count].tot_d1_blocks =
+
+                blk_geom->sq_size == 128 ? 17 :
+                blk_geom->sq_size > 8 ? 25 :
+                blk_geom->sq_size == 8 ? 5 : 1;
+
+            resultsPtr->leaf_data_array[resultsPtr->leaf_count].leaf_index = 0;//valid only for square 85 world. will be removed.
+            resultsPtr->leaf_data_array[resultsPtr->leaf_count].mds_idx = blk_index;
+            if (blk_geom->sq_size > 4)
+            {
+                resultsPtr->leaf_data_array[resultsPtr->leaf_count++].split_flag = EB_TRUE;
+                split_flag = EB_TRUE;
+            }
+            else {
+                resultsPtr->leaf_data_array[resultsPtr->leaf_count++].split_flag = EB_FALSE;
+                split_flag = EB_FALSE;
+            }
+        }
+
+        blk_index++;
+    }
+}
+#endif
 void Forward85CuToModeDecision(
     SequenceControlSet                   *sequence_control_set_ptr,
     PictureControlSet                    *picture_control_set_ptr) {
@@ -1500,6 +1554,10 @@ void derive_search_method(
             picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_NON4_BLOCKS_DEPTH_MODE;
         else
             picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_BLOCKS_DEPTH_MODE;
+
+#if ADP_BQ
+        picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_ALL_BLOCKS_DEPTH_MODE;
+#endif
     }
 
 #if ADP_STATS_PER_LAYER
@@ -2226,14 +2284,25 @@ void* mode_decision_configuration_kernel(void *input_ptr)
         av1_estimate_coefficients_rate(
             md_rate_estimation_array,
             picture_control_set_ptr->coeff_est_entropy_coder_ptr->fc);
-
+#if ADP_BQ
+        if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_SQ_DEPTH_MODE || picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+#else
         if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_DEPTH_MODE) {
+#endif
             derive_sb_md_mode(
                 sequence_control_set_ptr,
                 picture_control_set_ptr,
                 context_ptr);
 
             for (int sb_index = 0; sb_index < picture_control_set_ptr->sb_total_count; ++sb_index) {
+#if ADP_BQ
+                if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_ALL_BLOCKS_DEPTH_MODE) {
+                    sb_forward_all_blocks_to_md(
+                        sequence_control_set_ptr,
+                        picture_control_set_ptr,
+                        sb_index);
+                }  else
+#endif
                 if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_BLOCKS_DEPTH_MODE) {
                     sb_forward_sq_blocks_to_md(
                         sequence_control_set_ptr,
@@ -2254,6 +2323,9 @@ void* mode_decision_configuration_kernel(void *input_ptr)
                         sb_index);
                 }
             }
+#if ADP_BQ
+            picture_control_set_ptr->parent_pcs_ptr->average_qp = (uint8_t)picture_control_set_ptr->parent_pcs_ptr->picture_qp;
+#endif
         }
 
         else  if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_ALL_DEPTH_MODE) {

@@ -4473,7 +4473,11 @@ void HalfPelSearch_LCU(
             }
         }
     }
+#if ADP_BQ
+    if (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+#else
     if (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
+#endif
         // 64x32
         for (pu_index = 0; pu_index < 2; ++pu_index) {
             puShiftXIndex = 0;
@@ -8262,7 +8266,9 @@ EbErrorType motion_estimate_lcu(
 
     numOfListToSearch = (picture_control_set_ptr->slice_type == P_SLICE) ? (uint32_t) REF_LIST_0
                                                                          : (uint32_t) REF_LIST_1;
-
+#if ADP_BQ 
+    // to add the support for extra partitioning method here
+#endif
     EbBool is_nsq_table_used = (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE &&
                                 picture_control_set_ptr->nsq_search_level >= NSQ_SEARCH_LEVEL1 &&
                                 picture_control_set_ptr->nsq_search_level < NSQ_SEARCH_FULL) ? EB_TRUE : EB_FALSE;
@@ -8734,7 +8740,11 @@ EbErrorType motion_estimate_lcu(
 
             {
                 {
+#if ADP_BQ
+                    if (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+#else
                     if (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
+#endif
 #if MRP_ME
                         initialize_buffer32bits_func_ptr_array[asm_type](context_ptr->p_sb_best_sad[listIndex][ref_pic_index], 52, 1, MAX_SAD_VALUE);
 
@@ -8991,33 +9001,37 @@ EbErrorType motion_estimate_lcu(
 #if M0_ME_QUARTER_PEL_SEARCH
                     // Quarter-Pel Refinement [8 search positions]
                     QuarterPelSearch_LCU(
-                            context_ptr,
+                        context_ptr,
 #if M0_HIGH_PRECISION_INTERPOLATION
-                    context_ptr->integer_buffer_ptr[listIndex][ref_pic_index] + (ME_FILTER_PAD_DISTANCE >> 1) + ((ME_FILTER_PAD_DISTANCE >> 1) * context_ptr->interpolated_full_stride[listIndex][ref_pic_index]),
-                            context_ptr->interpolated_full_stride[listIndex][ref_pic_index],
-                            &(context_ptr->pos_b_buffer[listIndex][ref_pic_index][(ME_FILTER_PAD_DISTANCE >> 1) * context_ptr->interpolated_stride]),  //points to b position of the figure above
+                        context_ptr->integer_buffer_ptr[listIndex][ref_pic_index] + (ME_FILTER_PAD_DISTANCE >> 1) + ((ME_FILTER_PAD_DISTANCE >> 1) * context_ptr->interpolated_full_stride[listIndex][ref_pic_index]),
+                        context_ptr->interpolated_full_stride[listIndex][ref_pic_index],
+                        &(context_ptr->pos_b_buffer[listIndex][ref_pic_index][(ME_FILTER_PAD_DISTANCE >> 1) * context_ptr->interpolated_stride]),  //points to b position of the figure above
 #else
-                            context_ptr->integer_buffer_ptr[listIndex][ref_pic_index] + (ME_FILTER_TAP >> 1) + ((ME_FILTER_TAP >> 1) * context_ptr->interpolated_full_stride[listIndex][ref_pic_index]),
-                            context_ptr->interpolated_full_stride[listIndex][ref_pic_index],
-                            &(context_ptr->pos_b_buffer[listIndex][ref_pic_index][(ME_FILTER_TAP >> 1) * context_ptr->interpolated_stride]),  //points to b position of the figure above
+                        context_ptr->integer_buffer_ptr[listIndex][ref_pic_index] + (ME_FILTER_TAP >> 1) + ((ME_FILTER_TAP >> 1) * context_ptr->interpolated_full_stride[listIndex][ref_pic_index]),
+                        context_ptr->interpolated_full_stride[listIndex][ref_pic_index],
+                        &(context_ptr->pos_b_buffer[listIndex][ref_pic_index][(ME_FILTER_TAP >> 1) * context_ptr->interpolated_stride]),  //points to b position of the figure above
 #endif
-                            &(context_ptr->pos_h_buffer[listIndex][ref_pic_index][1]),                                                      //points to h position of the figure above
-                            &(context_ptr->pos_j_buffer[listIndex][ref_pic_index][0]),                                                      //points to j position of the figure above
-                            x_search_area_origin,
-                            y_search_area_origin,
-                            asm_type,
-                            picture_control_set_ptr->cu8x8_mode == CU_8x8_MODE_1,
+                        &(context_ptr->pos_h_buffer[listIndex][ref_pic_index][1]),                                                      //points to h position of the figure above
+                        &(context_ptr->pos_j_buffer[listIndex][ref_pic_index][0]),                                                      //points to j position of the figure above
+                        x_search_area_origin,
+                        y_search_area_origin,
+                        asm_type,
+                        picture_control_set_ptr->cu8x8_mode == CU_8x8_MODE_1,
 #if M9_SUBPEL_SELECTION
-                            enableHalfPel32x32,
-                            enableHalfPel16x16,
-                            enableHalfPel8x8,
+                        enableHalfPel32x32,
+                        enableHalfPel16x16,
+                        enableHalfPel8x8,
 #endif
-                            enableQuarterPel,
+                        enableQuarterPel,
 #if DISABLE_NSQ_FOR_NON_REF || DISABLE_NSQ
 #if TEST5_DISABLE_NSQ_ME
-                            EB_FALSE);
+                        EB_FALSE);
 #else
-                            picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE);
+#if ADP_BQ 
+                        picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE);
+#else
+                        picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE);
+#endif
 #endif
 #else
                     sequence_control_set_ptr->static_config.ext_block_flag);
@@ -9151,7 +9165,11 @@ EbErrorType motion_estimate_lcu(
         total_me_candidate_index = candidateIndex;
 
         if (numOfListToSearch) {
+#if ADP_BQ 
+            if (picture_control_set_ptr->cu8x8_mode == CU_8x8_MODE_0 || pu_index < 21 || (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE)) {
+#else
             if (picture_control_set_ptr->cu8x8_mode == CU_8x8_MODE_0 || pu_index < 21 || (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)) {
+#endif
                 BiPredictionSearch(
 #if MEMORY_FOOTPRINT_OPT_ME_MV
                     sequence_control_set_ptr,
