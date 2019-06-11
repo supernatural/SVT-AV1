@@ -3439,8 +3439,6 @@ EB_EXTERN void av1_encode_pass(
 #if  INCOMPLETE_SB_FIX
         if (part != PARTITION_SPLIT && !((sb_origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
             (sb_origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
-       //     if (part != PARTITION_SPLIT && !((sequence_control_set_ptr->sb_params_array[tbAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
-       //         (sequence_control_set_ptr->sb_params_array[tbAddr].origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
 #else
         if (part != PARTITION_SPLIT) {
 #endif

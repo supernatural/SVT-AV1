@@ -35,18 +35,10 @@
 extern "C" {
 #endif
 
-//#define SHUT_FILTERING                    0
-//#define HARD_CODE_DEPTH                   0
-//#define NSQ_OFF                           0
 #define INCOMPLETE_SB_FIX                 1
-//#define	INTRA_DC_ONLY                    0
-//#define TRANSFORM_SEARCH_OFF	          0
-
-//#define QPS_TESTS                         0
+#define SSSE_OFF 0
 
 //#define SPLIT_FIX                         1
-#define WIDTH 640
-#define HEIGHT 360
 
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
 
