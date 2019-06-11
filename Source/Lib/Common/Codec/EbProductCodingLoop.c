@@ -1647,7 +1647,7 @@ void ProductCodingLoopInitFastLoop(
         context_ptr->cu_origin_x,
         context_ptr->cu_origin_y,
 #if !REMOVE_SKIP_COEFF_NEIGHBOR_ARRAY
-        BLOCK_SIZE_64,
+        BLOCK_SIZE_64, 
         skip_coeff_neighbor_array,
 #endif
 #if !FIXED_128x128_CONTEXT_UPDATE
@@ -3316,8 +3316,11 @@ uint64_t estimate_tx_size_bits(
     BlockSize bsize = blk_geom->bsize;
     const int32_t bw = mi_size_wide[bsize];
     const int32_t bh = mi_size_high[bsize];
+#if INCOMPLETE_SB_FIX
+    uint32_t mi_stride = pcsPtr->mi_stride;
+#else
     uint32_t mi_stride = pcsPtr->parent_pcs_ptr->sequence_control_set_ptr->picture_width_in_sb*(BLOCK_SIZE_64 >> MI_SIZE_LOG2);
-
+#endif
     set_mi_row_col(
         pcsPtr,
         xd,
@@ -6228,7 +6231,7 @@ EB_EXTERN EbErrorType mode_decision_sb(
         context_ptr->cu_origin_y = sb_origin_y + blk_geom->origin_y;
 
         const EbMdcLeafData * const leafDataPtr = &mdcResultTbPtr->leaf_data_array[cuIdx];
-        context_ptr->sb_sz = BLOCK_SIZE_64;
+        context_ptr->sb_sz = BLOCK_SIZE_64; 
         context_ptr->round_origin_x = ((context_ptr->cu_origin_x >> 3) << 3);
         context_ptr->round_origin_y = ((context_ptr->cu_origin_y >> 3) << 3);
         context_ptr->sb_origin_x = sb_origin_x;
@@ -6318,8 +6321,6 @@ EB_EXTERN EbErrorType mode_decision_sb(
 #if  INCOMPLETE_SB_FIX
         if (!((context_ptr->sb_origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
             (context_ptr->sb_origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
-       //     if (!((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
-       //         (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
             md_encode_block(
                 sequence_control_set_ptr,
                 picture_control_set_ptr,
@@ -6352,11 +6353,6 @@ EB_EXTERN EbErrorType mode_decision_sb(
                 blk_geom->bheight);*/
 
         }
-        //if (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y >= 320 && blk_geom->bwidth == 64 && picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index == 0)
-        //    context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0;// context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost / 10;
-        //else if ((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth > sequence_control_set_ptr->seq_header.max_frame_width) ||
-        //    (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight > sequence_control_set_ptr->seq_header.max_frame_height))
-        //    context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0xfffffffff;
 #else
         md_encode_block(
             sequence_control_set_ptr,

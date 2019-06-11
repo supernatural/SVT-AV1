@@ -5978,8 +5978,11 @@ void code_tx_size(
     BlockSize bsize = blk_geom->bsize;
     const int32_t bw = mi_size_wide[bsize];
     const int32_t bh = mi_size_high[bsize];
+#if INCOMPLETE_SB_FIX
+    uint32_t mi_stride = pcsPtr->mi_stride;
+#else
     uint32_t mi_stride = pcsPtr->parent_pcs_ptr->sequence_control_set_ptr->picture_width_in_sb*(BLOCK_SIZE_64 >> MI_SIZE_LOG2);
-
+#endif
     set_mi_row_col(
         pcsPtr,
         xd,

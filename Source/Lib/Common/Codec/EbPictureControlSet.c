@@ -991,6 +991,22 @@ EbErrorType picture_control_set_ctor(
     EB_MALLOC(int8_t*, object_ptr->cu32x32_quant_coeff_num_map_array, sizeof(int8_t) * cu32x32QuantCoeffNumMapArraySize, EB_N_PTR);
 #endif
     //the granularity is 4x4
+#if INCOMPLETE_SB_FIX
+
+    EB_MALLOC(ModeInfo**, object_ptr->mi_grid_base, sizeof(ModeInfo*) * all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2), EB_N_PTR);
+
+    EB_MALLOC(ModeInfo*, object_ptr->mip, sizeof(ModeInfo) *all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2), EB_N_PTR);
+
+    memset(object_ptr->mip, 0, sizeof(ModeInfo) * all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2));
+    // pictureLcuWidth * pictureLcuHeight
+
+    uint32_t miIdx;
+    for (miIdx = 0; miIdx < all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2); ++miIdx)
+        object_ptr->mi_grid_base[miIdx] = object_ptr->mip + miIdx;
+    object_ptr->mi_stride = picture_sb_w * (initDataPtr->sb_size_pix >> MI_SIZE_LOG2);
+
+#else
+
     EB_MALLOC(ModeInfo**, object_ptr->mi_grid_base, sizeof(ModeInfo*) * object_ptr->sb_total_count*(BLOCK_SIZE_64 / 4)*(BLOCK_SIZE_64 / 4), EB_N_PTR);
 
     EB_MALLOC(ModeInfo*, object_ptr->mip, sizeof(ModeInfo) * object_ptr->sb_total_count*(BLOCK_SIZE_64 / 4)*(BLOCK_SIZE_64 / 4), EB_N_PTR);
@@ -1002,6 +1018,7 @@ EbErrorType picture_control_set_ctor(
     for (miIdx = 0; miIdx < object_ptr->sb_total_count*(BLOCK_SIZE_64 >> MI_SIZE_LOG2)*(BLOCK_SIZE_64 >> MI_SIZE_LOG2); ++miIdx)
         object_ptr->mi_grid_base[miIdx] = object_ptr->mip + miIdx;
     object_ptr->mi_stride = pictureLcuWidth * (BLOCK_SIZE_64 / 4);
+#endif
     object_ptr->hash_table.p_lookup_table = NULL;
     av1_hash_table_create(&object_ptr->hash_table);
     return EB_ErrorNone;
@@ -1233,8 +1250,13 @@ EbErrorType picture_parent_control_set_ctor(
 
     object_ptr->av1_cm->interp_filter = SWITCHABLE;
 
-    object_ptr->av1_cm->mi_stride = pictureLcuWidth * (BLOCK_SIZE_64 / 4);
 
+#if INCOMPLETE_SB_FIX
+    const uint16_t picture_sb_w = (uint16_t)((initDataPtr->picture_width + initDataPtr->sb_size_pix - 1) / initDataPtr->sb_size_pix);
+    object_ptr->av1_cm->mi_stride = picture_sb_w * (initDataPtr->sb_size_pix >> MI_SIZE_LOG2);
+#else
+    object_ptr->av1_cm->mi_stride = pictureLcuWidth * (BLOCK_SIZE_64 / 4);
+#endif
     object_ptr->av1_cm->p_pcs_ptr = object_ptr;
 
     EB_MALLOC(Yv12BufferConfig*, object_ptr->av1_cm->frame_to_show, sizeof(Yv12BufferConfig), EB_N_PTR);

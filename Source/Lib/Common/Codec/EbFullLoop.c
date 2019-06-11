@@ -2390,8 +2390,6 @@ void product_full_loop(
             uint32_t input_tu_origin_index = (context_ptr->sb_origin_x + tx_org_x + input_picture_ptr->origin_x) + ((context_ptr->sb_origin_y + tx_org_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y);
             uint32_t y_has_coeff           = y_count_non_zero_coeffs[txb_itr] > 0;
 
-
-
             if (y_has_coeff) {
                 (void)context_ptr;
                 uint8_t     *pred_buffer = &(candidateBuffer->prediction_ptr->buffer_y[tu_origin_index]);
@@ -2755,6 +2753,11 @@ void product_full_loop_tx_search(
 #else
             tu_origin_index = context_ptr->blk_geom->origin_x + (context_ptr->blk_geom->origin_y * candidateBuffer->residual_ptr->stride_y);
 #endif
+
+#if INCOMPLETE_SB_FIX
+            int32_t cropped_tx_width = MIN(context_ptr->blk_geom->tx_width[tx_depth][txb_itr], picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_width - (context_ptr->sb_origin_x + txb_origin_x));
+            int32_t cropped_tx_height = MIN(context_ptr->blk_geom->tx_height[tx_depth][txb_itr], picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_height - (context_ptr->sb_origin_y + txb_origin_y));
+#endif
             y_tu_coeff_bits = 0;
 
 
@@ -2886,16 +2889,26 @@ void product_full_loop_tx_search(
                     input_picture_ptr->stride_y,
                     candidateBuffer->prediction_ptr->buffer_y + tu_origin_index,
                     candidateBuffer->prediction_ptr->stride_y,
+#if INCOMPLETE_SB_FIX
+                    cropped_tx_width,
+                    cropped_tx_height);
+#else
                     context_ptr->blk_geom->tx_width[tx_depth][txb_itr],
                     context_ptr->blk_geom->tx_height[tx_depth][txb_itr]);
+#endif
 
                 tuFullDistortion[0][DIST_CALC_RESIDUAL] = spatial_full_distortion_kernel_func_ptr_array[asm_type][Log2f(context_ptr->blk_geom->tx_width[tx_depth][txb_itr]) - 2](
                     input_picture_ptr->buffer_y + input_tu_origin_index,
                     input_picture_ptr->stride_y,
                     &(((uint8_t*)candidateBuffer->recon_ptr->buffer_y)[tu_origin_index]),
                     candidateBuffer->recon_ptr->stride_y,
+#if INCOMPLETE_SB_FIX
+                    cropped_tx_width,
+                    cropped_tx_height);
+#else
                     context_ptr->blk_geom->tx_width[tx_depth][txb_itr],
                     context_ptr->blk_geom->tx_height[tx_depth][txb_itr]);
+#endif
 
                 tuFullDistortion[0][DIST_CALC_PREDICTION] <<= 4;
                 tuFullDistortion[0][DIST_CALC_RESIDUAL] <<= 4;
@@ -4560,10 +4573,8 @@ uint32_t d2_inter_depth_block_decision(
                 compute_depth_costs(context_ptr, sequence_control_set_ptr, current_depth_idx_mds, parent_depth_idx_mds, ns_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth], &parent_depth_cost, &current_depth_cost);
 #if INCOMPLETE_SB_FIX
             const BlockGeom          * parent_blk_geom = get_blk_geom_mds(parent_depth_idx_mds);
-            if (
-                //(parent_blk_geom->bwidth != 64 && ((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + parent_blk_geom->origin_x + parent_blk_geom->bwidth / 2 >= sequence_control_set_ptr->seq_header.max_frame_width) ||
-                (/*parent_blk_geom->bsize != sequence_control_set_ptr->seq_header.sb_size && */((context_ptr->sb_origin_x + parent_blk_geom->origin_x + parent_blk_geom->bwidth / 2 >= sequence_control_set_ptr->seq_header.max_frame_width) ||
-                    (context_ptr->sb_origin_y + parent_blk_geom->origin_y + parent_blk_geom->bheight / 2 >= sequence_control_set_ptr->seq_header.max_frame_height))))
+            if (/*parent_blk_geom->bsize != sequence_control_set_ptr->seq_header.sb_size && */((context_ptr->sb_origin_x + parent_blk_geom->origin_x + parent_blk_geom->bwidth / 2 >= sequence_control_set_ptr->seq_header.max_frame_width) ||
+                    (context_ptr->sb_origin_y + parent_blk_geom->origin_y + parent_blk_geom->bheight / 2 >= sequence_control_set_ptr->seq_header.max_frame_height)))
                 parent_depth_cost = MAX_MODE_COST;
 #endif 
             if (parent_depth_cost <= current_depth_cost) {
