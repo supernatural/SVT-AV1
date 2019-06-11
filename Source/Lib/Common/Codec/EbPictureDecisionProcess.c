@@ -1070,13 +1070,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 3                                              Chroma blind interpolation search at fast loop
     // 4                                              Interpolation search at fast loop
 
+
 #if NEW_PRESETS
+#if M2_IT_LEVEL
         if (picture_control_set_ptr->is_used_as_reference_flag)
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP_UV_BLIND;
         else
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
 #else
-#if M2_IT_LEVEL
         if (MR_MODE)
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP;
 #if SCREEN_CONTENT_SETTINGS
@@ -1100,6 +1101,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
         else
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
+#endif
 #else
     if (MR_MODE)
         picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP;
@@ -1117,7 +1119,6 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
     else
         picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
-#endif
 #endif
     // Loop filter Level                            Settings
     // 0                                            OFF
