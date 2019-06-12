@@ -3437,8 +3437,7 @@ EB_EXTERN void av1_encode_pass(
 
         sb_ptr->cu_partition_array[blk_it] = context_ptr->md_context->md_cu_arr_nsq[blk_it].part;
 #if  INCOMPLETE_SB_FIX
-        if (part != PARTITION_SPLIT && !((sb_origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
-            (sb_origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
+        if (part != PARTITION_SPLIT &&  sequence_control_set_ptr->sb_geom[tbAddr].block_is_allowed[blk_it]){
 #else
         if (part != PARTITION_SPLIT) {
 #endif

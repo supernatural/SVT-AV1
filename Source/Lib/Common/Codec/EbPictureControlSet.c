@@ -1249,14 +1249,7 @@ EbErrorType picture_parent_control_set_ctor(
     EB_MALLOC(Av1Common*, object_ptr->av1_cm, sizeof(Av1Common), EB_N_PTR);
 
     object_ptr->av1_cm->interp_filter = SWITCHABLE;
-
-
-#if INCOMPLETE_SB_FIX
-    const uint16_t picture_sb_w = (uint16_t)((initDataPtr->picture_width + initDataPtr->sb_size_pix - 1) / initDataPtr->sb_size_pix);
-    object_ptr->av1_cm->mi_stride = picture_sb_w * (initDataPtr->sb_size_pix >> MI_SIZE_LOG2);
-#else
     object_ptr->av1_cm->mi_stride = pictureLcuWidth * (BLOCK_SIZE_64 / 4);
-#endif
     object_ptr->av1_cm->p_pcs_ptr = object_ptr;
 
     EB_MALLOC(Yv12BufferConfig*, object_ptr->av1_cm->frame_to_show, sizeof(Yv12BufferConfig), EB_N_PTR);

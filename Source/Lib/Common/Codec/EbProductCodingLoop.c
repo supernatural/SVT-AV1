@@ -4328,12 +4328,16 @@ void AV1PerformFullLoop(
         }
 #endif
 #if ATB_MD
-        uint8_t end_tx_depth = get_end_tx_depth(context_ptr, picture_control_set_ptr->parent_pcs_ptr->atb_mode, candidate_ptr, context_ptr->blk_geom->bsize, candidateBuffer->candidate_ptr->type);
 #if INCOMPLETE_SB_FIX
-        if (context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x + context_ptr->blk_geom->bwidth > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_width ||
-            context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y + context_ptr->blk_geom->bheight > picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_height)
+        uint8_t end_tx_depth = 0;
+        // end_tx_depth set to zero for blocks which go beyond the picture boundaries
+        if (!(context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x + context_ptr->blk_geom->bwidth < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_width &&
+            context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y + context_ptr->blk_geom->bheight < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->seq_header.max_frame_height))
             end_tx_depth = 0;
-
+        else
+            end_tx_depth = get_end_tx_depth(context_ptr, picture_control_set_ptr->parent_pcs_ptr->atb_mode, candidate_ptr, context_ptr->blk_geom->bsize, candidateBuffer->candidate_ptr->type);
+#else
+        uint8_t end_tx_depth = get_end_tx_depth(context_ptr, picture_control_set_ptr->parent_pcs_ptr->atb_mode, candidate_ptr, context_ptr->blk_geom->bsize, candidateBuffer->candidate_ptr->type);
 #endif        
         // Transform partitioning path (INTRA Luma)
         if (picture_control_set_ptr->parent_pcs_ptr->atb_mode && end_tx_depth && candidateBuffer->candidate_ptr->type == INTRA_MODE && candidateBuffer->candidate_ptr->use_intrabc == 0) {
@@ -6319,8 +6323,7 @@ EB_EXTERN EbErrorType mode_decision_sb(
         cu_ptr->tx_depth = 0;
 #endif
 #if  INCOMPLETE_SB_FIX
-        if (!((context_ptr->sb_origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 > sequence_control_set_ptr->seq_header.max_frame_width) ||
-            (context_ptr->sb_origin_y + blk_geom->origin_y + blk_geom->bheight / 2 > sequence_control_set_ptr->seq_header.max_frame_height))) {
+        if (picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_geom[lcuAddr].block_is_allowed[cu_ptr->mds_idx]){
             md_encode_block(
                 sequence_control_set_ptr,
                 picture_control_set_ptr,
@@ -6333,25 +6336,17 @@ EB_EXTERN EbErrorType mode_decision_sb(
 #endif
                 lcuAddr,
                 bestCandidateBuffers);
-            //  if (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y >= HEIGHT && blk_geom->bwidth == 64 && picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index > 0)
-            //      context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0;
-              //else if ((sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x + blk_geom->bwidth  > sequence_control_set_ptr->seq_header.max_frame_width) ||
-              //    (sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y + blk_geom->bheight  > sequence_control_set_ptr->seq_header.max_frame_height))
-              //    context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0xfffffffff;
+
         }
         else {
-            //            context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds].cost = 0;// 0xffffffff;
+            // If the block is out of the boundaries, md is not performed. 
+            // - For square blocks, since the blocks can be further splitted, they are considered in d2_inter_depth_block_decision with cost of zero.
+            // - For non square blocks, since they can not be splitted further the cost is set to a large value (MAX_MODE_COST >> 4) to make sure they are not selected. 
+            //   The value is set to MAX_MODE_COST >> 4 to make sure there is not overflow when adding costs.
             if (context_ptr->blk_geom->shape != PART_N)
-                context_ptr->md_local_cu_unit[context_ptr->cu_ptr->mds_idx].cost = 0xffffffff;
+                context_ptr->md_local_cu_unit[context_ptr->cu_ptr->mds_idx].cost = (MAX_MODE_COST >> 4);
             else
-                context_ptr->md_local_cu_unit[context_ptr->cu_ptr->mds_idx].cost = 0;// 0xffffffff;
-
- /*           printf("SKIPED:%d\t%d\t%d\t%d\n",
-                sequence_control_set_ptr->sb_params_array[lcuAddr].origin_x + blk_geom->origin_x,
-                sequence_control_set_ptr->sb_params_array[lcuAddr].origin_y + blk_geom->origin_y,
-                blk_geom->bwidth,
-                blk_geom->bheight);*/
-
+                context_ptr->md_local_cu_unit[context_ptr->cu_ptr->mds_idx].cost = 0;
         }
 #else
         md_encode_block(

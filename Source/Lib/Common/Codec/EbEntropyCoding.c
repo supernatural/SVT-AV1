@@ -6803,7 +6803,7 @@ EB_EXTERN EbErrorType write_sb(
 #endif
     EbBool checkCuOutOfBound = EB_FALSE;
 
-    SbGeom * sb_geom = &sequence_control_set_ptr->sb_geom[tb_ptr->index];// .block_is_inside_md_scan[blk_index])
+    SbGeom * sb_geom = &sequence_control_set_ptr->sb_geom[tb_ptr->index];
 
     if (!(sb_geom->is_complete_sb))
         checkCuOutOfBound = EB_TRUE;
@@ -6822,7 +6822,6 @@ EB_EXTERN EbErrorType write_sb(
 #if  INCOMPLETE_SB_FIX
             if (blk_geom->shape != PART_N)
                 blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
-
             codeCuCond = EB_FALSE;
             if (((cu_origin_x + blk_geom->bwidth / 2 < sequence_control_set_ptr->seq_header.max_frame_width) || (cu_origin_y + blk_geom->bheight / 2 < sequence_control_set_ptr->seq_header.max_frame_height)) &&
                 cu_origin_x < sequence_control_set_ptr->seq_header.max_frame_width && cu_origin_y < sequence_control_set_ptr->seq_header.max_frame_height)
