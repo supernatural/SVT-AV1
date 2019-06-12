@@ -2889,7 +2889,7 @@ void product_full_loop_tx_search(
                     input_picture_ptr->stride_y,
                     candidateBuffer->prediction_ptr->buffer_y + tu_origin_index,
                     candidateBuffer->prediction_ptr->stride_y,
-#if INCOMPLETE_SB_FIX
+#if 0 // INCOMPLETE_SB_FIX
                     cropped_tx_width,
                     cropped_tx_height);
 #else
@@ -2902,7 +2902,7 @@ void product_full_loop_tx_search(
                     input_picture_ptr->stride_y,
                     &(((uint8_t*)candidateBuffer->recon_ptr->buffer_y)[tu_origin_index]),
                     candidateBuffer->recon_ptr->stride_y,
-#if INCOMPLETE_SB_FIX
+#if 0 //INCOMPLETE_SB_FIX
                     cropped_tx_width,
                     cropped_tx_height);
 #else

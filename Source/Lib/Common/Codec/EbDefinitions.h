@@ -42,8 +42,6 @@ extern "C" {
 #define INCOMPLETE_SB_FIX                 1
 #define SSSE_OFF 0
 
-//#define SPLIT_FIX                         1
-
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
 
 #if ALT_REF_SUPPORT
