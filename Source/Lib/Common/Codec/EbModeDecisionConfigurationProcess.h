@@ -59,21 +59,30 @@ extern "C" {
 
         // Adaptive Depth Partitioning
         uint32_t                            *sb_score_array;
+#if ADP_BQ
+        uint32_t                             cost_depth_mode[MAX_SUPPORTED_SEGMENTS];
+        uint32_t                            *sb_cost_array;
+#else
         uint8_t                              cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE];
         uint8_t                             *sb_cost_array;
+#endif
         uint32_t                             predicted_cost;
         uint32_t                             budget;
         int8_t                               score_th[MAX_SUPPORTED_SEGMENTS];
+#if ADP_BQ
+        uint32_t                             interval_cost[MAX_SUPPORTED_SEGMENTS];
+#else
         uint8_t                              interval_cost[MAX_SUPPORTED_SEGMENTS];
+#endif
         uint8_t                              number_of_segments;
         uint32_t                             sb_min_score;
         uint32_t                             sb_max_score;
         uint32_t                             sb_average_score;
 
         const BlockGeom                     *blk_geom;
-        ModeDecisionCandidate             *mdc_candidate_ptr;
+        ModeDecisionCandidate               *mdc_candidate_ptr;
         CandidateMv                         *mdc_ref_mv_stack;
-        CodingUnit                        *mdc_cu_ptr;
+        CodingUnit                          *mdc_cu_ptr;
         uint8_t                              qp_index;
 
         // Multi - Mode signal(s)

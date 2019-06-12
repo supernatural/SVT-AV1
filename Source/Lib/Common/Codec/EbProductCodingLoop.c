@@ -5779,13 +5779,15 @@ void md_encode_block(
 
 #if ADP_BQ 
         uint8_t nsq_max_shapes_md = (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) ?
-            6 :
+            NSQ_SEARCH_LEVEL6 :
             (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_SQ_DEPTH_MODE) ?
-               0 :
+               NSQ_SEARCH_OFF :
                picture_control_set_ptr->parent_pcs_ptr->nsq_max_shapes_md;
 
         if (allowed_ns_cu(is_nsq_table_used, nsq_max_shapes_md, context_ptr, is_complete_sb))
 #else
+    if (picture_control_set_ptr->parent_pcs_ptr->nsq_max_shapes_md != 6)
+        printf("");
     if (allowed_ns_cu(
         is_nsq_table_used, picture_control_set_ptr->parent_pcs_ptr->nsq_max_shapes_md,context_ptr,is_complete_sb ))
 #endif

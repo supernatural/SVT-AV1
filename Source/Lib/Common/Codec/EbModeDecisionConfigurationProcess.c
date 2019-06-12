@@ -94,6 +94,16 @@ static uint8_t intrabc_max_mesh_pct[MAX_MESH_SPEED + 1] = { 100, 100, 100,
 #define U_152                       152
 #define SQ_NON4_BLOCKS_SEARCH_COST  155
 #define SQ_BLOCKS_SEARCH_COST       190
+#if ADP_BQ
+#define SB_NSQ_LEVEL_0_SEARCH_COST  SQ_BLOCKS_SEARCH_COST
+#define SB_NSQ_LEVEL_1_SEARCH_COST  250
+#define SB_NSQ_LEVEL_2_SEARCH_COST  300
+#define SB_NSQ_LEVEL_3_SEARCH_COST  350
+#define SB_NSQ_LEVEL_4_SEARCH_COST  400
+#define SB_NSQ_LEVEL_5_SEARCH_COST  450
+#define SB_NSQ_LEVEL_6_SEARCH_COST  500
+#endif
+
 #define HIGH_SB_SCORE             60000
 #define MEDIUM_SB_SCORE           16000
 #define LOW_SB_SCORE               6000
@@ -744,8 +754,11 @@ EbErrorType mode_decision_configuration_context_ctor(
 
     // Adaptive Depth Partitioning
     EB_MALLOC(uint32_t*, context_ptr->sb_score_array, sizeof(uint32_t) * sb_total_count, EB_N_PTR);
+#if ADP_BQ
+    EB_MALLOC(uint32_t *, context_ptr->sb_cost_array, sizeof(uint32_t) * sb_total_count, EB_N_PTR);
+#else
     EB_MALLOC(uint8_t *, context_ptr->sb_cost_array, sizeof(uint8_t) * sb_total_count, EB_N_PTR);
-
+#endif
     // Open Loop Partitioning
     EB_MALLOC(ModeDecisionCandidate*, context_ptr->mdc_candidate_ptr, sizeof(ModeDecisionCandidate), EB_N_PTR);
     EB_MALLOC(CandidateMv*, context_ptr->mdc_ref_mv_stack, sizeof(CandidateMv), EB_N_PTR);
@@ -1512,13 +1525,31 @@ void AuraDetection(
 void configure_adp(
     PictureControlSet                *picture_control_set_ptr,
     ModeDecisionConfigurationContext *context_ptr){
-    UNUSED(picture_control_set_ptr);
-    context_ptr->cost_depth_mode[SB_SQ_BLOCKS_DEPTH_MODE      - 1]       = SQ_BLOCKS_SEARCH_COST;
-    context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1]       = SQ_NON4_BLOCKS_SEARCH_COST;
-    context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE      - 1]       = SB_OPEN_LOOP_COST;
-    context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1]       = SB_FAST_OPEN_LOOP_COST;
-    context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1]       = SB_PRED_OPEN_LOOP_COST;
 
+#if !ADP_BQ
+    UNUSED(picture_control_set_ptr);
+#endif
+
+#if ADP_BQ
+    if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+        context_ptr->cost_depth_mode[SB_NSQ_LEVEL_6_DEPTH_MODE - 1] = SB_NSQ_LEVEL_6_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_NSQ_LEVEL_5_DEPTH_MODE - 1] = SB_NSQ_LEVEL_5_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_NSQ_LEVEL_4_DEPTH_MODE - 1] = SB_NSQ_LEVEL_4_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_NSQ_LEVEL_3_DEPTH_MODE - 1] = SB_NSQ_LEVEL_3_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_NSQ_LEVEL_2_DEPTH_MODE - 1] = SB_NSQ_LEVEL_2_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_NSQ_LEVEL_1_DEPTH_MODE - 1] = SB_NSQ_LEVEL_1_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_NSQ_LEVEL_0_DEPTH_MODE - 1] = SB_NSQ_LEVEL_0_SEARCH_COST;
+    }
+    else {
+#endif
+        context_ptr->cost_depth_mode[SB_SQ_BLOCKS_DEPTH_MODE      - 1] = SQ_BLOCKS_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1] = SQ_NON4_BLOCKS_SEARCH_COST;
+        context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE      - 1] = SB_OPEN_LOOP_COST;
+        context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1] = SB_FAST_OPEN_LOOP_COST;
+        context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1] = SB_PRED_OPEN_LOOP_COST;
+#if ADP_BQ
+    }
+#endif
     // Initialize the score based TH
     context_ptr->score_th[0] = ~0;
     context_ptr->score_th[1] = ~0;
@@ -1543,42 +1574,94 @@ void derive_search_method(
 {
     uint32_t sb_index;
 
-    for (sb_index = 0; sb_index < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_tot_cnt; sb_index++) {
-        if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1])
-            picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_PRED_OPEN_LOOP_DEPTH_MODE;
-        else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1])
-            picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_FAST_OPEN_LOOP_DEPTH_MODE;
-        else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE - 1])
-            picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_OPEN_LOOP_DEPTH_MODE;
-        else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1])
-            picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_NON4_BLOCKS_DEPTH_MODE;
-        else
-            picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_BLOCKS_DEPTH_MODE;
 
 #if ADP_BQ
-        picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_ALL_BLOCKS_DEPTH_MODE;
-#endif
+    if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+        for (sb_index = 0; sb_index < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_tot_cnt; sb_index++) {
+           
+            if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_NSQ_LEVEL_0_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_NSQ_LEVEL_0_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_NSQ_LEVEL_1_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_NSQ_LEVEL_1_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_NSQ_LEVEL_2_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_NSQ_LEVEL_2_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_NSQ_LEVEL_3_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_NSQ_LEVEL_3_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_NSQ_LEVEL_4_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_NSQ_LEVEL_4_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_NSQ_LEVEL_5_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_NSQ_LEVEL_5_DEPTH_MODE;
+            else 
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_NSQ_LEVEL_6_DEPTH_MODE;
+        }
     }
+    else {
+#endif
+        for (sb_index = 0; sb_index < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_tot_cnt; sb_index++) {
+            if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_PRED_OPEN_LOOP_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_FAST_OPEN_LOOP_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_OPEN_LOOP_DEPTH_MODE;
+            else if (context_ptr->sb_cost_array[sb_index] == context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1])
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_NON4_BLOCKS_DEPTH_MODE;
+            else
+                picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_BLOCKS_DEPTH_MODE;
+        }
+#if ADP_BQ
+    }
+#endif
 
 #if ADP_STATS_PER_LAYER
     SequenceControlSet *sequence_control_set_ptr = (SequenceControlSet *)picture_control_set_ptr->sequence_control_set_wrapper_ptr->object_ptr;
 
-    for (sb_index = 0; sb_index < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_tot_cnt; sb_index++) {
-        sequence_control_set_ptr->total_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index] ++;
+#if ADP_BQ
+    if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+        for (sb_index = 0; sb_index < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_tot_cnt; sb_index++) {
+            sequence_control_set_ptr->total_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index] ++;
 
-        if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_BLOCKS_DEPTH_MODE)
-            sequence_control_set_ptr->sq_search_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
-        else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_NON4_BLOCKS_DEPTH_MODE)
-            sequence_control_set_ptr->sq_non4_search_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
-        else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_OPEN_LOOP_DEPTH_MODE)
-            sequence_control_set_ptr->mdc_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
-        else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_FAST_OPEN_LOOP_DEPTH_MODE)
-            sequence_control_set_ptr->pred_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
-        else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_PRED_OPEN_LOOP_DEPTH_MODE)
-            sequence_control_set_ptr->pred1_nfl_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
-        else
-            SVT_LOG("error");
+            if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_NSQ_LEVEL_6_DEPTH_MODE)
+                sequence_control_set_ptr->nsq_level6_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_NSQ_LEVEL_5_DEPTH_MODE)
+                sequence_control_set_ptr->nsq_level5_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_NSQ_LEVEL_4_DEPTH_MODE)
+                sequence_control_set_ptr->nsq_level4_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_NSQ_LEVEL_3_DEPTH_MODE)
+                sequence_control_set_ptr->nsq_level3_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_NSQ_LEVEL_2_DEPTH_MODE)
+                sequence_control_set_ptr->nsq_level2_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_NSQ_LEVEL_1_DEPTH_MODE)
+                sequence_control_set_ptr->nsq_level1_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_NSQ_LEVEL_0_DEPTH_MODE)
+                sequence_control_set_ptr->nsq_level0_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else
+                SVT_LOG("error");
+
+
+        }
     }
+    else {
+#endif
+        for (sb_index = 0; sb_index < picture_control_set_ptr->parent_pcs_ptr->sequence_control_set_ptr->sb_tot_cnt; sb_index++) {
+            sequence_control_set_ptr->total_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index] ++;
+
+            if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_BLOCKS_DEPTH_MODE)
+                sequence_control_set_ptr->sq_search_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_NON4_BLOCKS_DEPTH_MODE)
+                sequence_control_set_ptr->sq_non4_search_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_OPEN_LOOP_DEPTH_MODE)
+                sequence_control_set_ptr->mdc_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_FAST_OPEN_LOOP_DEPTH_MODE)
+                sequence_control_set_ptr->pred_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_PRED_OPEN_LOOP_DEPTH_MODE)
+                sequence_control_set_ptr->pred1_nfl_count[picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index]  ++;
+            else
+                SVT_LOG("error");
+        }
+#if ADP_BQ
+    }
+#endif
 #endif
 }
 
@@ -1704,44 +1787,79 @@ void  derive_optimal_budget_per_sb(
 
 EbErrorType derive_default_segments(
     SequenceControlSet               *sequence_control_set_ptr,
+#if ADP_BQ
+    PictureControlSet                *picture_control_set_ptr,
+#endif
     ModeDecisionConfigurationContext *context_ptr){
     EbErrorType return_error = EB_ErrorNone;
 
-    if (context_ptr->budget > sequence_control_set_ptr->sb_tot_cnt * U_140) {
-        context_ptr->number_of_segments = 2;
-        context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
-        context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE      - 1];
-        context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
-    }
-    else if (context_ptr->budget > sequence_control_set_ptr->sb_tot_cnt * U_115) {
-        context_ptr->number_of_segments = 3;
+#if ADP_BQ
+    if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
 
-        context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
-
-        context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1];
-        context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE      - 1];
-        context_ptr->interval_cost[2] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
+        if (context_ptr->budget > sequence_control_set_ptr->sb_tot_cnt * SB_NSQ_LEVEL_3_SEARCH_COST) {
+            context_ptr->number_of_segments = 5;
+            context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
+            context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_2_DEPTH_MODE - 1];
+            context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_3_DEPTH_MODE - 1];
+            context_ptr->interval_cost[2] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_4_DEPTH_MODE - 1];
+            context_ptr->interval_cost[3] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_5_DEPTH_MODE - 1];
+            context_ptr->interval_cost[4] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_6_DEPTH_MODE - 1];
+        }
+        else {      
+            context_ptr->number_of_segments = 5;
+            context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
+            context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_0_DEPTH_MODE - 1];
+            context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_1_DEPTH_MODE - 1];
+            context_ptr->interval_cost[2] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_2_DEPTH_MODE - 1];
+            context_ptr->interval_cost[3] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_3_DEPTH_MODE - 1];
+            context_ptr->interval_cost[4] = context_ptr->cost_depth_mode[SB_NSQ_LEVEL_4_DEPTH_MODE - 1];
+        }
     }
     else {
-        context_ptr->number_of_segments = 4;
+#endif
+        if (context_ptr->budget > sequence_control_set_ptr->sb_tot_cnt * U_140) {
+            context_ptr->number_of_segments = 2;
+            context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
+            context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE - 1];
+            context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
+        }
+        else if (context_ptr->budget > sequence_control_set_ptr->sb_tot_cnt * U_115) {
+            context_ptr->number_of_segments = 3;
 
-        context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
-        context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
 
-        context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1];
-        context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1];
-        context_ptr->interval_cost[2] = context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE      - 1];
-        context_ptr->interval_cost[3] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
+            context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1];
+            context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE - 1];
+            context_ptr->interval_cost[2] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
+        }
+        else {
+            context_ptr->number_of_segments = 4;
+
+            context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
+            context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
+
+            context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1];
+            context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1];
+            context_ptr->interval_cost[2] = context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE - 1];
+            context_ptr->interval_cost[3] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
+        }
+#if ADP_BQ
     }
-
+#endif
     return return_error;
 }
 /******************************************************
@@ -1855,14 +1973,26 @@ void set_target_budget_oq(
     // Hsan: cross multiplication to derive budget_per_sb from sb_average_score; budget_per_sb range is [SB_PRED_OPEN_LOOP_COST,U_150], and sb_average_score range [0,HIGH_SB_SCORE]
     // Hsan: 3 segments [0,LOW_SB_SCORE], [LOW_SB_SCORE,MEDIUM_SB_SCORE] and [MEDIUM_SB_SCORE,U_150]
     uint32_t budget_per_sb;
-    if (context_ptr->sb_average_score <= LOW_SB_SCORE)
-        budget_per_sb = ((context_ptr->sb_average_score * (SB_OPEN_LOOP_COST - SB_PRED_OPEN_LOOP_COST)) / LOW_SB_SCORE) + SB_PRED_OPEN_LOOP_COST;
-    else if (context_ptr->sb_average_score <= MEDIUM_SB_SCORE)
-        budget_per_sb = (((context_ptr->sb_average_score - LOW_SB_SCORE) * (U_125 - SB_OPEN_LOOP_COST)) / (MEDIUM_SB_SCORE - LOW_SB_SCORE)) + SB_OPEN_LOOP_COST;
-    else
-        budget_per_sb = (((context_ptr->sb_average_score - MEDIUM_SB_SCORE) * (U_150 - U_125)) / (HIGH_SB_SCORE - MEDIUM_SB_SCORE)) + U_125;
-    budget_per_sb = CLIP3(SB_PRED_OPEN_LOOP_COST, U_150, budget_per_sb + budget_per_sb_boost[context_ptr->adp_level] + luminosity_change_boost);
 
+#if ADP_BQ
+    if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+        budget_per_sb = ((context_ptr->sb_average_score * (SB_NSQ_LEVEL_6_SEARCH_COST - SB_NSQ_LEVEL_0_SEARCH_COST)) / HIGH_SB_SCORE) + SB_NSQ_LEVEL_0_SEARCH_COST;
+
+        budget_per_sb = CLIP3(SB_NSQ_LEVEL_0_SEARCH_COST, SB_NSQ_LEVEL_6_SEARCH_COST, budget_per_sb);
+    }
+    else {
+#endif
+        if (context_ptr->sb_average_score <= LOW_SB_SCORE)
+            budget_per_sb = ((context_ptr->sb_average_score * (SB_OPEN_LOOP_COST - SB_PRED_OPEN_LOOP_COST)) / LOW_SB_SCORE) + SB_PRED_OPEN_LOOP_COST;
+        else if (context_ptr->sb_average_score <= MEDIUM_SB_SCORE)
+            budget_per_sb = (((context_ptr->sb_average_score - LOW_SB_SCORE) * (U_125 - SB_OPEN_LOOP_COST)) / (MEDIUM_SB_SCORE - LOW_SB_SCORE)) + SB_OPEN_LOOP_COST;
+        else
+            budget_per_sb = (((context_ptr->sb_average_score - MEDIUM_SB_SCORE) * (U_150 - U_125)) / (HIGH_SB_SCORE - MEDIUM_SB_SCORE)) + U_125;
+        budget_per_sb = CLIP3(SB_PRED_OPEN_LOOP_COST, U_150, budget_per_sb + budget_per_sb_boost[context_ptr->adp_level] + luminosity_change_boost);
+
+#if ADP_BQ
+    }
+#endif
     //printf("picture_number = %d\tsb_average_score = %d\n", picture_control_set_ptr->picture_number, budget_per_sb);
     budget = sequence_control_set_ptr->sb_tot_cnt * budget_per_sb;
 
@@ -1911,6 +2041,9 @@ void derive_sb_md_mode(
     // Set the percentage based thresholds
     derive_default_segments(
         sequence_control_set_ptr,
+#if ADP_BQ
+        picture_control_set_ptr,
+#endif
         context_ptr);
     // Perform Budgetting
     derive_optimal_budget_per_sb(
@@ -2294,36 +2427,40 @@ void* mode_decision_configuration_kernel(void *input_ptr)
                 picture_control_set_ptr,
                 context_ptr);
 
-            for (int sb_index = 0; sb_index < picture_control_set_ptr->sb_total_count; ++sb_index) {
 #if ADP_BQ
-                if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_ALL_BLOCKS_DEPTH_MODE) {
+            if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
+                for (int sb_index = 0; sb_index < picture_control_set_ptr->sb_total_count; ++sb_index) {
                     sb_forward_all_blocks_to_md(
-                        sequence_control_set_ptr,
-                        picture_control_set_ptr,
-                        sb_index);
-                }  else
-#endif
-                if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_BLOCKS_DEPTH_MODE) {
-                    sb_forward_sq_blocks_to_md(
-                        sequence_control_set_ptr,
-                        picture_control_set_ptr,
-                        sb_index);
-                }
-                else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_NON4_BLOCKS_DEPTH_MODE) {
-                    sb_forward_sq_non4_blocks_to_md(
-                        sequence_control_set_ptr,
-                        picture_control_set_ptr,
-                        sb_index);
-                }
-                else {
-                    PerformEarlyLcuPartitionningLcu(
-                        context_ptr,
                         sequence_control_set_ptr,
                         picture_control_set_ptr,
                         sb_index);
                 }
             }
+            else {
+#endif
+                for (int sb_index = 0; sb_index < picture_control_set_ptr->sb_total_count; ++sb_index) {
+                        if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_BLOCKS_DEPTH_MODE) {
+                            sb_forward_sq_blocks_to_md(
+                                sequence_control_set_ptr,
+                                picture_control_set_ptr,
+                                sb_index);
+                        }
+                        else if (picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] == SB_SQ_NON4_BLOCKS_DEPTH_MODE) {
+                            sb_forward_sq_non4_blocks_to_md(
+                                sequence_control_set_ptr,
+                                picture_control_set_ptr,
+                                sb_index);
+                        }
+                        else {
+                            PerformEarlyLcuPartitionningLcu(
+                                context_ptr,
+                                sequence_control_set_ptr,
+                                picture_control_set_ptr,
+                                sb_index);
+                        }
+                }
 #if ADP_BQ
+            }
             picture_control_set_ptr->parent_pcs_ptr->average_qp = (uint8_t)picture_control_set_ptr->parent_pcs_ptr->picture_qp;
 #endif
         }

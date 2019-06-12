@@ -49,7 +49,7 @@ extern "C" {
 #define DOWN_SAMPLING_FILTERING           1 // Use down-sampling filtering (instead of down-sampling decimation) for 1/16th and 1/4th reference frame(s) generation @ ME and temporal filtering search, added the multi-mode signal down_sampling_method_me_search; filtering if M0, and decimation for M1 & higher
 #define DECIMATION_BUG_FIX                1 // Removed HME Level0 check @ 1/16th decimation to guarantee valid ZZ SAD and SCD data when HME Level0 is OFF  
 
-#define ADP_BQ                            0 // Added the ability to perform ADP for best quality mode
+#define ADP_BQ                            1 // Added the ability to perform ADP for best quality mode
 
 #define RDOQ_INTRA                        1 // Enable RDOQ INTRA (RDOQ INTER already active) 
 #define DC_SIGN_CONTEXT_EP                1 // Fixed DC level derivation & update @ encode pass
@@ -282,7 +282,7 @@ extern "C" {
 #define MRP_FIX_RC_WARNINGS       1
 #endif
 
-#define ADP_STATS_PER_LAYER                             0
+#define ADP_STATS_PER_LAYER                             1
 #define NFL_TX_TH                                       12 // To be tuned
 #define NFL_IT_TH                                       2 // To be tuned
 #if BASE_LAYER_REF
@@ -3243,7 +3243,15 @@ typedef enum EbPictureDepthMode
 
 #define EB_SB_DEPTH_MODE              uint8_t
 #if ADP_BQ
-#define SB_ALL_BLOCKS_DEPTH_MODE            0
+// ADP for NSQ
+#define SB_NSQ_LEVEL_6_DEPTH_MODE           1
+#define SB_NSQ_LEVEL_5_DEPTH_MODE           2
+#define SB_NSQ_LEVEL_4_DEPTH_MODE           3
+#define SB_NSQ_LEVEL_3_DEPTH_MODE           4
+#define SB_NSQ_LEVEL_2_DEPTH_MODE           5
+#define SB_NSQ_LEVEL_1_DEPTH_MODE           6
+#define SB_NSQ_LEVEL_0_DEPTH_MODE           7
+// ADP for SQ
 #define SB_SQ_BLOCKS_DEPTH_MODE             1
 #define SB_SQ_NON4_BLOCKS_DEPTH_MODE        2
 #define SB_OPEN_LOOP_DEPTH_MODE             3

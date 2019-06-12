@@ -9166,7 +9166,7 @@ EbErrorType motion_estimate_lcu(
 
         if (numOfListToSearch) {
 #if ADP_BQ 
-            if (picture_control_set_ptr->cu8x8_mode == CU_8x8_MODE_0 || pu_index < 21 || (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE)) {
+            if (picture_control_set_ptr->cu8x8_mode == CU_8x8_MODE_0 || pu_index < 21 || picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE || picture_control_set_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) {
 #else
             if (picture_control_set_ptr->cu8x8_mode == CU_8x8_MODE_0 || pu_index < 21 || (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)) {
 #endif
