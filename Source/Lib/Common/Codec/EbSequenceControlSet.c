@@ -515,13 +515,7 @@ extern EbErrorType sb_params_init(
 
             if (blk_geom->shape != PART_N)
                 blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
-#if  INCOMPLETE_SB_FIX
-            sequence_control_set_ptr->sb_params_array[sb_index].block_is_inside_md_scan[md_scan_block_index] =
-                ((sequence_control_set_ptr->sb_params_array[sb_index].origin_x /*+ blk_geom->origin_x + blk_geom->bwidth / 2*/ >= sequence_control_set_ptr->seq_header.max_frame_width) ||
-                (sequence_control_set_ptr->sb_params_array[sb_index].origin_y /*+ blk_geom->origin_y + blk_geom->bheight / 2*/ >= sequence_control_set_ptr->seq_header.max_frame_height)) ?
-                EB_FALSE :
-                EB_TRUE;
-#else
+#if  !INCOMPLETE_SB_FIX
             sequence_control_set_ptr->sb_params_array[sb_index].block_is_inside_md_scan[md_scan_block_index] =
                 ((sequence_control_set_ptr->sb_params_array[sb_index].origin_x + blk_geom->origin_x + blk_geom->bwidth > sequence_control_set_ptr->seq_header.max_frame_width) ||
                 (sequence_control_set_ptr->sb_params_array[sb_index].origin_y + blk_geom->origin_y + blk_geom->bheight > sequence_control_set_ptr->seq_header.max_frame_height)) ?
@@ -570,16 +564,22 @@ EbErrorType sb_geom_init(SequenceControlSet * sequence_control_set_ptr)
 
         for (md_scan_block_index = 0; md_scan_block_index < max_block_count ; md_scan_block_index++) {
             const BlockGeom * blk_geom = get_blk_geom_mds(md_scan_block_index);
-
+#if INCOMPLETE_SB_FIX
+            sequence_control_set_ptr->sb_geom[sb_index].block_is_allowed[md_scan_block_index] =
+                ((sequence_control_set_ptr->sb_geom[sb_index].origin_x + blk_geom->origin_x + blk_geom->bwidth / 2 < sequence_control_set_ptr->seq_header.max_frame_width) &&
+                (sequence_control_set_ptr->sb_geom[sb_index].origin_y + blk_geom->origin_y + blk_geom->bheight / 2 < sequence_control_set_ptr->seq_header.max_frame_height)) ?
+                EB_TRUE :
+                EB_FALSE;
             if (blk_geom->shape != PART_N)
                 blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
-#if INCOMPLETE_SB_FIX
             sequence_control_set_ptr->sb_geom[sb_index].block_is_inside_md_scan[md_scan_block_index] =
-                ((sequence_control_set_ptr->sb_geom[sb_index].origin_x /*+ blk_geom->origin_x + blk_geom->bwidth / 2*/ >= sequence_control_set_ptr->seq_header.max_frame_width) ||
-                (sequence_control_set_ptr->sb_geom[sb_index].origin_y /*+ blk_geom->origin_y + blk_geom->bheight / 2*/ >= sequence_control_set_ptr->seq_header.max_frame_height)) ?
+                ((sequence_control_set_ptr->sb_geom[sb_index].origin_x >= sequence_control_set_ptr->seq_header.max_frame_width) ||
+                (sequence_control_set_ptr->sb_geom[sb_index].origin_y  >= sequence_control_set_ptr->seq_header.max_frame_height)) ?
                 EB_FALSE :
                 EB_TRUE;
 #else
+            if (blk_geom->shape != PART_N)
+                blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
             sequence_control_set_ptr->sb_geom[sb_index].block_is_inside_md_scan[md_scan_block_index] =
                 ((sequence_control_set_ptr->sb_geom[sb_index].origin_x + blk_geom->origin_x + blk_geom->bwidth > sequence_control_set_ptr->seq_header.max_frame_width) ||
                 (sequence_control_set_ptr->sb_geom[sb_index].origin_y + blk_geom->origin_y + blk_geom->bheight > sequence_control_set_ptr->seq_header.max_frame_height)) ?

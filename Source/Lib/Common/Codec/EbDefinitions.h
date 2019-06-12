@@ -34,7 +34,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define BLK_128 1
 #define INCOMPLETE_SB_FIX                 1
 #define SSSE_OFF 0
 

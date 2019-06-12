@@ -4551,9 +4551,7 @@ uint32_t d2_inter_depth_block_decision(
             else
                 compute_depth_costs(context_ptr, sequence_control_set_ptr, current_depth_idx_mds, parent_depth_idx_mds, ns_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth], &parent_depth_cost, &current_depth_cost);
 #if INCOMPLETE_SB_FIX
-            const BlockGeom          * parent_blk_geom = get_blk_geom_mds(parent_depth_idx_mds);
-            if (/*parent_blk_geom->bsize != sequence_control_set_ptr->seq_header.sb_size && */((context_ptr->sb_origin_x + parent_blk_geom->origin_x + parent_blk_geom->bwidth / 2 >= sequence_control_set_ptr->seq_header.max_frame_width) ||
-                    (context_ptr->sb_origin_y + parent_blk_geom->origin_y + parent_blk_geom->bheight / 2 >= sequence_control_set_ptr->seq_header.max_frame_height)))
+            if(!sequence_control_set_ptr->sb_geom[lcuAddr].block_is_allowed[parent_depth_idx_mds])
                 parent_depth_cost = MAX_MODE_COST;
 #endif 
             if (parent_depth_cost <= current_depth_cost) {
