@@ -5777,9 +5777,10 @@ void md_encode_block(
     uint8_t                            is_complete_sb = sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb;
 
 
-#if ADP_BQ 
+#if ADP_BQ // --
+        uint8_t partitioning_to_nsq_max_shapes[SB_NSQ_LEVEL_0_DEPTH_MODE] = {6,5,4,3,2,1,0};
         uint8_t nsq_max_shapes_md = (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_NSQ_DEPTH_MODE) ?
-            NSQ_SEARCH_LEVEL6 :
+            partitioning_to_nsq_max_shapes[picture_control_set_ptr->parent_pcs_ptr->sb_depth_mode_array[lcuAddr] - 1]:
             (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_SQ_DEPTH_MODE) ?
                NSQ_SEARCH_OFF :
                picture_control_set_ptr->parent_pcs_ptr->nsq_max_shapes_md;
