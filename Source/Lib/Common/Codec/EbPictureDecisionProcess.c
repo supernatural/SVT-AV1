@@ -886,7 +886,9 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
 
 #endif
-#if M3_DEPTH            
+#if M4_DEPTH
+            picture_control_set_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#elif M3_DEPTH            
             if (picture_control_set_ptr->slice_type == I_SLICE)
                 picture_control_set_ptr->pic_depth_mode = PIC_ALL_C_DEPTH_MODE;
             else
@@ -948,11 +950,10 @@ EbErrorType signal_derivation_multi_processes_oq(
     // NSQ_SEARCH_FULL                                Allow NSQ Intra-FULL and Inter-FULL
 
 #if NEW_PRESETS
-    
 #if M3_DEPTH   
-    
+
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
-#elif M2_NSQ_LEVEL
+#elif M2_DEPTH
         if (picture_control_set_ptr->is_used_as_reference_flag)
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL5;
         else
@@ -1072,7 +1073,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 
 #if NEW_PRESETS
-#if M2_IT_LEVEL
+#if M4_IP_LEVEL 
+            if (picture_control_set_ptr->temporal_layer_index == 0)
+                picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP_UV_BLIND;
+            else
+                picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
+#elif M2_IP_LEVEL
         if (picture_control_set_ptr->is_used_as_reference_flag)
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP_UV_BLIND;
         else
@@ -1360,10 +1366,13 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set tx search skip weights (MAX_MODE_COST: no skipping; 0: always skipping)
 #if NEW_PRESETS
 #if M2_TX_W
-        if (picture_control_set_ptr->is_used_as_reference_flag)
-            picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
+        if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
+            picture_control_set_ptr->tx_weight = MAX_MODE_COST;
         else
-            picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
+            if (picture_control_set_ptr->is_used_as_reference_flag)
+                picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
+            else
+                picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
 #else
     if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
         picture_control_set_ptr->tx_weight = MAX_MODE_COST;
@@ -1399,8 +1408,18 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set tx search reduced set falg (0: full tx set; 1: reduced tx set; 1: two tx))
 #if NEW_PRESETS
-#if M2_TX_RS
-            if (picture_control_set_ptr->is_used_as_reference_flag)
+#if M4_TX_RS
+    
+    if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
+        picture_control_set_ptr->tx_search_reduced_set = 0;
+    else
+        picture_control_set_ptr->tx_search_reduced_set = 1;
+#elif M2_TX_RS
+    if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
+        picture_control_set_ptr->tx_search_reduced_set = 0;
+    else
+
+        if (picture_control_set_ptr->is_used_as_reference_flag)
             picture_control_set_ptr->tx_search_reduced_set = 0;
         else
             picture_control_set_ptr->tx_search_reduced_set = 1;

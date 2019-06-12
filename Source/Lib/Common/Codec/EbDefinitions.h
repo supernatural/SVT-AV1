@@ -46,19 +46,24 @@ extern "C" {
 #define M1_ATB                  0 // M0 - OW
 #define M1_SUBPEL               0 // M0 - OW
 #define M1_MRP                  0 // M0 - OW
-#define M1_SB_SIZE              0 // M0 - OW NO 360P
-                                 
+#define M1_SB_SIZE              0 // M0 - OW NO 360P                                 
+
 #define M2_NFL                  0 // M1/M2-M3/
 #define M2_3X3_UNI_INJECT       0 //  M0-M1/M2-M4/OW
 #define M2_3X3_BI_INJECT        0 //  M0-M1/M2-M4/OW
 #define M2_ME_SR_METHOD         0 //  M0-M1/OW
-#define M2_NSQ_LEVEL            0 //  M0-M1/OW
-#define M2_IT_LEVEL             0 //  M0-M1/OW
+#define M2_DEPTH                0 //  M0-M1/OW
+#define M2_IP_LEVEL             0 //  M0-M1/OW
 #define M2_TX_W                 0 //  M0-M1/OW
 #define M2_TX_RS                0 // M1/M2-M3/
 #define M2_INTRA                0 // M1/M2-M3/
 
 #define M3_DEPTH                0 
+
+#define M4_NFL                  0 
+#define M4_DEPTH                0 
+#define M4_IP_LEVEL             0 
+#define M4_TX_RS                0 
 
 
 

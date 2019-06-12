@@ -1231,7 +1231,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->nfl_level = 7;
     else
 #endif
-#if M2_NFL
+#if M4_NFL
+        if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+            context_ptr->nfl_level = 4;
+        else
+            context_ptr->nfl_level = 5;
+#elif M2_NFL
         if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
             context_ptr->nfl_level = 2;
         else
