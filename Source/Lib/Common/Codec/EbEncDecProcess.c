@@ -1590,9 +1590,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->spatial_sse_full_loop = EB_FALSE;
 #endif
 #endif
-#if  SSSE_OFF
-    context_ptr->spatial_sse_full_loop = EB_FALSE;
-#endif
 
 #if M9_INTER_SRC_SRC_FAST_LOOP
     // Derive Spatial SSE Flag
