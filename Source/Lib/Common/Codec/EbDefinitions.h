@@ -36,6 +36,39 @@ extern "C" {
 #endif
 #define NEWM0_SC                          1
 
+#define SHUT_DECOUPLED_FAST_LOOP         0
+#define M1_NEARST_NEAR_                  0
+#define M1_4N_N4_                        0
+#define M1_TRELLIS_                      0
+#define M1_Q_FP_                         0
+#define M1_NSQ_TABLE_                    0
+#define M1_LOOP_FILTER_                  0
+#define M1_INTRA_PRED_                   0
+#define M1_ATB_                          0
+#define M1_MRP_MODE_                     0
+#define M1_DOWN_SAMPLE_FILTER_           0
+#define M1_ME_HME_                       0      
+
+#define M2_ME_HME_                       0
+#define M2_NFL_                          0
+#define M2_DECOUPLEINTRA_INTER_          0
+#define M2_FASTLOOP_METHOD_              0
+#define M2_FL_ESCAPE_                    0
+#define M2_GOLBAL_MV_                    0
+#define M2_WARPED_                       0
+#define M2_3X3_UNI_                      0
+#define M2_3X3_BI_                       0
+#define M2_REDUD_BLOCK_                  0
+#define M2_FRAC_SR_METHOD_               0
+#define M2_64X64_FRAC_SR_METHOD_         0
+#define M2_DEPTH_                        0
+#define M2_IF_                           0
+#define M2_LOOP_FILTER_                  0
+#define M2_CDEF_                         0
+#define M2_SG_                           0
+#define M2_WN_                           0
+#define M2_TX_REDUCED_SET_               0
+#define M2_SUBPEL_                       0
 
 
 #define BEST_Q_M0                         1 // disable all shortcuts into M0
@@ -302,7 +335,11 @@ extern "C" {
 #else
 #define IMPROVED_SUBPEL_SEARCH                          1
 #endif
+#if SHUT_DECOUPLED_FAST_LOOP || M2_NFL_ || M2_DECOUPLEINTRA_INTER_
+#define DECOUPLED_FAST_LOOP                             0
+#else
 #define DECOUPLED_FAST_LOOP                             1
+#endif
 #define FIX_ATB_SUPPORT                                 0 // ENABLE_SKIP_REDUNDANT_BLOCK
 #define FIX_TX_SEARCH_FOR_MR_MODE                       1
 

@@ -859,14 +859,30 @@ EbErrorType signal_derivation_multi_processes_oq(
     uint8_t sc_content_detected = picture_control_set_ptr->sc_content_detected;
 
 #if SCREEN_CONTENT_SETTINGS && PCS_ME_FIX
-    picture_control_set_ptr->enable_hme_level0_flag = enable_hme_level0_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][picture_control_set_ptr->enc_mode];
-    picture_control_set_ptr->enable_hme_level1_flag = enable_hme_level1_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][picture_control_set_ptr->enc_mode];
-    picture_control_set_ptr->enable_hme_level2_flag = enable_hme_level2_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][picture_control_set_ptr->enc_mode];
+    
+    EbEncMode       enc_mode = picture_control_set_ptr->enc_mode ;
+#if M2_ME_HME_
+    enc_mode = ENC_M2;
+#elif M1_ME_HME_
+    enc_mode = ENC_M1;
+
+#endif
+    picture_control_set_ptr->enable_hme_level0_flag = enable_hme_level0_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][enc_mode];
+    picture_control_set_ptr->enable_hme_level1_flag = enable_hme_level1_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][enc_mode];
+    picture_control_set_ptr->enable_hme_level2_flag = enable_hme_level2_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][enc_mode];
 #endif
 
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
         if (sc_content_detected)
+#if M2_DEPTH_
+                if (picture_control_set_ptr->temporal_layer_index == 0)
+                    picture_control_set_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
+                else if (picture_control_set_ptr->is_used_as_reference_flag)
+                    picture_control_set_ptr->pic_depth_mode = PIC_ALL_C_DEPTH_MODE;
+                else
+                    picture_control_set_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
                 picture_control_set_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
             else if (picture_control_set_ptr->enc_mode <= ENC_M3)
@@ -883,6 +899,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                     picture_control_set_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
             else
                 picture_control_set_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#endif
         else
 
 #endif
@@ -968,6 +985,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_FULL;
 #if SCREEN_CONTENT_SETTINGS
         else if (sc_content_detected)
+#if M2_DEPTH_
+                if (picture_control_set_ptr->temporal_layer_index == 0)
+                    picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+                else if (picture_control_set_ptr->is_used_as_reference_flag)
+                    picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL4;
+                else
+                    picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
                 picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
             else if (picture_control_set_ptr->enc_mode <= ENC_M2)
@@ -986,6 +1011,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                     picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
             else
                     picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
+#endif
 
 #endif
         else if (picture_control_set_ptr->enc_mode <= ENC_M1)
@@ -1084,10 +1110,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP;
 #if SCREEN_CONTENT_SETTINGS
         else if (sc_content_detected)
+#if M2_IF_
+                picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
                 picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP_UV_BLIND;
             else
                 picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
+#endif
 #endif
         else if (picture_control_set_ptr->enc_mode <= ENC_M1)
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP_UV_BLIND;
@@ -1152,6 +1182,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (sc_content_detected)
+#if M2_LOOP_FILTER_
+            picture_control_set_ptr->loop_filter_mode = 0;
+#elif M1_LOOP_FILTER_
+        picture_control_set_ptr->loop_filter_mode = picture_control_set_ptr->is_used_as_reference_flag ? 3 : 0;
+
+#else
 #if LOOP_FILTER_FIX
         if (picture_control_set_ptr->enc_mode == ENC_M0)
             picture_control_set_ptr->loop_filter_mode = 3;
@@ -1163,6 +1199,8 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
         else
             picture_control_set_ptr->loop_filter_mode = 0;
+    
+#endif
     else
 
 #endif
@@ -1205,10 +1243,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
         if (sc_content_detected)
+#if M2_CDEF_
+                picture_control_set_ptr->cdef_filter_mode = 0;
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
                 picture_control_set_ptr->cdef_filter_mode = 4;
             else
                 picture_control_set_ptr->cdef_filter_mode = 0;
+#endif
         else
 #endif
         if (picture_control_set_ptr->enc_mode <= ENC_M7)
@@ -1250,10 +1292,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     Av1Common* cm = picture_control_set_ptr->av1_cm;
 #if NEW_PRESETS
     if (sc_content_detected)
+#if M2_SG_
+            cm->sg_filter_mode = 0;
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
             cm->sg_filter_mode = 4;
         else
             cm->sg_filter_mode = 0;
+#endif
     else
     if (picture_control_set_ptr->enc_mode <= ENC_M4)
         cm->sg_filter_mode = 4;
@@ -1281,10 +1327,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 #if SCREEN_CONTENT_SETTINGS
     if (sc_content_detected)
+#if M2_WN_
+        cm->wn_filter_mode = 0;
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
             cm->wn_filter_mode = 3;
         else
             cm->wn_filter_mode = 0;
+#endif
     else
 
 #endif
@@ -1398,6 +1448,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (sc_content_detected)
+#if M2_TX_REDUCED_SET_
+            if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
+                picture_control_set_ptr->tx_search_reduced_set = 0;
+            else
+                picture_control_set_ptr->tx_search_reduced_set = 1;
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
             picture_control_set_ptr->tx_search_reduced_set = 0;
         else if (picture_control_set_ptr->enc_mode <= ENC_M6)
@@ -1409,6 +1465,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->tx_search_reduced_set = 1;
         else
             picture_control_set_ptr->tx_search_reduced_set = 2;
+#endif
     else
 
 #endif
@@ -1490,6 +1547,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (sc_content_detected)
+#if M1_INTRA_PRED_
+            if (picture_control_set_ptr->temporal_layer_index == 0)
+                picture_control_set_ptr->intra_pred_mode = 1;
+            else
+                picture_control_set_ptr->intra_pred_mode = 2;
+#else
         if (picture_control_set_ptr->enc_mode == ENC_M0) 
             picture_control_set_ptr->intra_pred_mode = 0;
         else if (picture_control_set_ptr->enc_mode <= ENC_M2)
@@ -1504,6 +1567,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 picture_control_set_ptr->intra_pred_mode = 3;
         else
             picture_control_set_ptr->intra_pred_mode = 4;
+#endif
     else
 
 #endif
@@ -1567,7 +1631,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEWM0_SC
             if (0)//(picture_control_set_ptr->enc_mode <= ENC_M1)
 #else
-            (picture_control_set_ptr->enc_mode <= ENC_M1)
+            if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
                 picture_control_set_ptr->cu8x8_mode = CU_8x8_MODE_0;
             else
@@ -1589,7 +1653,9 @@ EbErrorType signal_derivation_multi_processes_oq(
         // 0                 OFF: no transform partitioning
         // 1                 Fast: perform transform partitioning for sensitive block sizes
         // 2                 Full: perform transform partitioning for all block sizes
-
+#if M1_ATB_
+        picture_control_set_ptr->atb_mode = 0;
+#else
         if (picture_control_set_ptr->enc_mode == ENC_M0 && sequence_control_set_ptr->static_config.encoder_bit_depth == EB_8BIT)
 #if SHUT_ATB
             picture_control_set_ptr->atb_mode = 0;
@@ -1602,6 +1668,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             picture_control_set_ptr->atb_mode = 0;
 
+#endif
 #endif
 
     return return_error;
@@ -3964,10 +4031,15 @@ void* picture_decision_kernel(void *input_ptr)
 #else
 #if SCREEN_CONTENT_SETTINGS
                                 if (picture_control_set_ptr->sc_content_detected)
+#if M2_SUBPEL_
+                                        picture_control_set_ptr->use_subpel_flag = 0;
+#else
+
                                     if (picture_control_set_ptr->enc_mode <= ENC_M1)
                                         picture_control_set_ptr->use_subpel_flag = 1;
                                     else
                                         picture_control_set_ptr->use_subpel_flag = 0;
+#endif
                                 else
 #endif
                                     picture_control_set_ptr->use_subpel_flag = 1;
