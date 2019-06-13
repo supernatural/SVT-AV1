@@ -39,7 +39,6 @@
 extern "C" {
 #endif
 
-
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
 
 #if ALT_REF_SUPPORT
