@@ -6336,7 +6336,6 @@ EB_EXTERN EbErrorType mode_decision_sb(
 #endif
                 lcuAddr,
                 bestCandidateBuffers);
-
         }
         else {
             // If the block is out of the boundaries, md is not performed. 
