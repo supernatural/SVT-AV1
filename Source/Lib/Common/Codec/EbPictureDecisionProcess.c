@@ -1564,7 +1564,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if M9_CU_8x8
 #if SCREEN_CONTENT_SETTINGS
         if (picture_control_set_ptr->sc_content_detected)
-            if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#if NEWM0_SC
+            if (0)//(picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
+            (picture_control_set_ptr->enc_mode <= ENC_M1)
+#endif
                 picture_control_set_ptr->cu8x8_mode = CU_8x8_MODE_0;
             else
                 picture_control_set_ptr->cu8x8_mode = (picture_control_set_ptr->temporal_layer_index > 0) ?

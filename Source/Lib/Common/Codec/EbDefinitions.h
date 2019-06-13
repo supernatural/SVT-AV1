@@ -297,7 +297,11 @@ extern "C" {
 
 #define EIGTH_PEL_MV                                    0
 #define DISABLE_NSQ_TABLE_FOR_M0                        1 // On wil disable the nsq_table ordering algrithm. This is a temporarily adoption that will be disable once we comeup with a better ordreing mecanisme when MRP i ON.
+#if NEWM0_SC
+#define IMPROVED_SUBPEL_SEARCH                          0
+#else
 #define IMPROVED_SUBPEL_SEARCH                          1
+#endif
 #define DECOUPLED_FAST_LOOP                             1
 #define FIX_ATB_SUPPORT                                 0 // ENABLE_SKIP_REDUNDANT_BLOCK
 #define FIX_TX_SEARCH_FOR_MR_MODE                       1
