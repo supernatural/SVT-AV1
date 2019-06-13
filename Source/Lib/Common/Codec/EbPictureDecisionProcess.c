@@ -1465,64 +1465,77 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (picture_control_set_ptr->slice_type == I_SLICE)
 #if M9_INTRA
 #if SCREEN_CONTENT_SETTINGS
-    if (sc_content_detected)
-        if (picture_control_set_ptr->enc_mode <= ENC_M6)
-            picture_control_set_ptr->intra_pred_mode = 0;
+        if (sc_content_detected)
+            if (picture_control_set_ptr->enc_mode <= ENC_M6)
+                picture_control_set_ptr->intra_pred_mode = 0;
+            else
+                picture_control_set_ptr->intra_pred_mode = 4;
         else
-            picture_control_set_ptr->intra_pred_mode = 4;
-    else
 #endif
 #if NEW_PRESETS
-        if (picture_control_set_ptr->enc_mode <= ENC_M6)
-            picture_control_set_ptr->intra_pred_mode = 0;
-        else
-            picture_control_set_ptr->intra_pred_mode = 4;
+            if (picture_control_set_ptr->enc_mode <= ENC_M6)
+                picture_control_set_ptr->intra_pred_mode = 0;
+            else
+                picture_control_set_ptr->intra_pred_mode = 4;
 #else
-        if (picture_control_set_ptr->enc_mode <= ENC_M7)
-            picture_control_set_ptr->intra_pred_mode = 0;
-        else
-            picture_control_set_ptr->intra_pred_mode = 4;
+            if (picture_control_set_ptr->enc_mode <= ENC_M7)
+                picture_control_set_ptr->intra_pred_mode = 0;
+            else
+                picture_control_set_ptr->intra_pred_mode = 4;
 #endif
 #else
-         picture_control_set_ptr->intra_pred_mode = 0;
+        picture_control_set_ptr->intra_pred_mode = 0;
 #endif
     else {
 #if NEW_PRESETS
-#if SCREEN_CONTENT_SETTINGS
-    if (sc_content_detected)
-        if (picture_control_set_ptr->enc_mode == ENC_M0) 
-            picture_control_set_ptr->intra_pred_mode = 0;
-        else if (picture_control_set_ptr->enc_mode <= ENC_M2)
-            if (picture_control_set_ptr->temporal_layer_index == 0)
-                picture_control_set_ptr->intra_pred_mode = 1;
-            else
-                picture_control_set_ptr->intra_pred_mode = 2;
-        else if (picture_control_set_ptr->enc_mode <= ENC_M6)
-            if (picture_control_set_ptr->temporal_layer_index == 0)
-                picture_control_set_ptr->intra_pred_mode = 2;
-            else
-                picture_control_set_ptr->intra_pred_mode = 3;
+#if M2_INTRA
+        if (picture_control_set_ptr->temporal_layer_index == 0)
+            picture_control_set_ptr->intra_pred_mode = 1;
         else
-            picture_control_set_ptr->intra_pred_mode = 4;
-    else
+            picture_control_set_ptr->intra_pred_mode = 3;
+#elif M1_INTRA_PRED
+        if (picture_control_set_ptr->temporal_layer_index == 0)
+            picture_control_set_ptr->intra_pred_mode = 1;
+        else
+            picture_control_set_ptr->intra_pred_mode = 2;
+
+#else
+#if SCREEN_CONTENT_SETTINGS
+        if (sc_content_detected)
+            if (picture_control_set_ptr->enc_mode == ENC_M0)
+                picture_control_set_ptr->intra_pred_mode = 0;
+            else if (picture_control_set_ptr->enc_mode <= ENC_M2)
+                if (picture_control_set_ptr->temporal_layer_index == 0)
+                    picture_control_set_ptr->intra_pred_mode = 1;
+                else
+                    picture_control_set_ptr->intra_pred_mode = 2;
+            else if (picture_control_set_ptr->enc_mode <= ENC_M6)
+                if (picture_control_set_ptr->temporal_layer_index == 0)
+                    picture_control_set_ptr->intra_pred_mode = 2;
+                else
+                    picture_control_set_ptr->intra_pred_mode = 3;
+            else
+                picture_control_set_ptr->intra_pred_mode = 4;
+        else
 
 #endif
-        if (picture_control_set_ptr->enc_mode == ENC_M0)
-            picture_control_set_ptr->intra_pred_mode = 0;
-        else if (picture_control_set_ptr->enc_mode  <= ENC_M1)
-            if (picture_control_set_ptr->temporal_layer_index == 0)
-                picture_control_set_ptr->intra_pred_mode = 1;
+            if (picture_control_set_ptr->enc_mode == ENC_M0)
+                picture_control_set_ptr->intra_pred_mode = 0;
+            else if (picture_control_set_ptr->enc_mode <= ENC_M1)
+                if (picture_control_set_ptr->temporal_layer_index == 0)
+                    picture_control_set_ptr->intra_pred_mode = 1;
+                else
+                    picture_control_set_ptr->intra_pred_mode = 2;
+            else if (picture_control_set_ptr->enc_mode <= ENC_M6)
+                if (picture_control_set_ptr->temporal_layer_index == 0)
+                    picture_control_set_ptr->intra_pred_mode = 1;
+                else
+                    picture_control_set_ptr->intra_pred_mode = 3;
             else
-                picture_control_set_ptr->intra_pred_mode = 2;
-        else if(picture_control_set_ptr->enc_mode <= ENC_M6)
-            if (picture_control_set_ptr->temporal_layer_index == 0)
-                picture_control_set_ptr->intra_pred_mode = 1;
-            else
-                picture_control_set_ptr->intra_pred_mode = 3;
-        else
-            picture_control_set_ptr->intra_pred_mode = 4;
+                picture_control_set_ptr->intra_pred_mode = 4;
+#endif
 #else
-        if (picture_control_set_ptr->enc_mode  <= ENC_M2)
+        if (picture_control_set_ptr->enc_mode <= ENC_M2)
             if (picture_control_set_ptr->temporal_layer_index == 0)
                 picture_control_set_ptr->intra_pred_mode = 1;
             else

@@ -35,8 +35,11 @@
 extern "C" {
 #endif
 
-
-
+#define MRP_L432_OFF            0
+#define MRP_L43_OFF             0
+#define M1_INTRA_PRED           0 // M0 -M1 - OW*
+#define FIX_ATB_SUPPORT         0 // ENABLE_SKIP_REDUNDANT_BLOCK
+#define M1_MRP                  0
 
 #define BEST_Q_M0                         1 // disable all shortcuts into M0
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
@@ -299,7 +302,7 @@ extern "C" {
 #define DISABLE_NSQ_TABLE_FOR_M0                        1 // On wil disable the nsq_table ordering algrithm. This is a temporarily adoption that will be disable once we comeup with a better ordreing mecanisme when MRP i ON.
 #define IMPROVED_SUBPEL_SEARCH                          1
 #define DECOUPLED_FAST_LOOP                             1
-#define FIX_ATB_SUPPORT                                 0 // ENABLE_SKIP_REDUNDANT_BLOCK
+
 #define FIX_TX_SEARCH_FOR_MR_MODE                       1
 
 #if BEST_Q_M0
