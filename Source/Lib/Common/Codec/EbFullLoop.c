@@ -4556,7 +4556,7 @@ uint32_t d2_inter_depth_block_decision(
 #if INCOMPLETE_SB_FIX
             if(!sequence_control_set_ptr->sb_geom[lcuAddr].block_is_allowed[parent_depth_idx_mds])
                 parent_depth_cost = MAX_MODE_COST;
-#endif 
+#endif
             if (parent_depth_cost <= current_depth_cost) {
                 context_ptr->md_cu_arr_nsq[parent_depth_idx_mds].split_flag = EB_FALSE;
                 context_ptr->md_local_cu_unit[parent_depth_idx_mds].cost = parent_depth_cost;

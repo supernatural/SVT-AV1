@@ -1647,7 +1647,7 @@ void ProductCodingLoopInitFastLoop(
         context_ptr->cu_origin_x,
         context_ptr->cu_origin_y,
 #if !REMOVE_SKIP_COEFF_NEIGHBOR_ARRAY
-        BLOCK_SIZE_64, 
+        BLOCK_SIZE_64,
         skip_coeff_neighbor_array,
 #endif
 #if !FIXED_128x128_CONTEXT_UPDATE
@@ -4338,7 +4338,7 @@ void AV1PerformFullLoop(
             end_tx_depth = 0;
 #else
         uint8_t end_tx_depth = get_end_tx_depth(context_ptr, picture_control_set_ptr->parent_pcs_ptr->atb_mode, candidate_ptr, context_ptr->blk_geom->bsize, candidateBuffer->candidate_ptr->type);
-#endif        
+#endif
         // Transform partitioning path (INTRA Luma)
         if (picture_control_set_ptr->parent_pcs_ptr->atb_mode && end_tx_depth && candidateBuffer->candidate_ptr->type == INTRA_MODE && candidateBuffer->candidate_ptr->use_intrabc == 0) {
             perform_intra_tx_partitioning(
@@ -6235,7 +6235,7 @@ EB_EXTERN EbErrorType mode_decision_sb(
         context_ptr->cu_origin_y = sb_origin_y + blk_geom->origin_y;
 
         const EbMdcLeafData * const leafDataPtr = &mdcResultTbPtr->leaf_data_array[cuIdx];
-        context_ptr->sb_sz = BLOCK_SIZE_64; 
+        context_ptr->sb_sz = BLOCK_SIZE_64;
         context_ptr->round_origin_x = ((context_ptr->cu_origin_x >> 3) << 3);
         context_ptr->round_origin_y = ((context_ptr->cu_origin_y >> 3) << 3);
         context_ptr->sb_origin_x = sb_origin_x;
@@ -6338,9 +6338,9 @@ EB_EXTERN EbErrorType mode_decision_sb(
                 bestCandidateBuffers);
         }
         else {
-            // If the block is out of the boundaries, md is not performed. 
+            // If the block is out of the boundaries, md is not performed.
             // - For square blocks, since the blocks can be further splitted, they are considered in d2_inter_depth_block_decision with cost of zero.
-            // - For non square blocks, since they can not be splitted further the cost is set to a large value (MAX_MODE_COST >> 4) to make sure they are not selected. 
+            // - For non square blocks, since they can not be splitted further the cost is set to a large value (MAX_MODE_COST >> 4) to make sure they are not selected.
             //   The value is set to MAX_MODE_COST >> 4 to make sure there is not overflow when adding costs.
             if (context_ptr->blk_geom->shape != PART_N)
                 context_ptr->md_local_cu_unit[context_ptr->cu_ptr->mds_idx].cost = (MAX_MODE_COST >> 4);
