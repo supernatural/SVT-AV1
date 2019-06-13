@@ -6462,9 +6462,9 @@ EB_EXTERN EbErrorType mode_decision_sb(
 #endif
             lcuAddr,
             bestCandidateBuffers);
+#endif
 #if FIX_ATB_SUPPORT
         }
-#endif
 #endif
         if (blk_geom->nsi + 1 == blk_geom->totns)
             d1_non_square_block_decision(context_ptr);
