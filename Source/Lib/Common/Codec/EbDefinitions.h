@@ -34,6 +34,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// to be added 
+#define M1_CHROMA               0 // M0 - M1/M4 - OW
+#define M1_NEARST_INJECT        0 // M0 - OW
+#define M1_4XN_NX4_INJECT       0 // M0 - OW
+#define M1_TRELLIS_QUANT_COEFF  0 // M0 - OW
+#define M1_NSQ_TABLE            0 // M0 - OW
+#define M1_CAP_ME_CANDIDATES    0 // M0 - OW
+#define M1_LOOP_FILTER          0 // M0 - M1/M5 - OW
+#define M1_ATB                  0 // M0 - OW
+#define M1_SUBPEL               0 // M0 - OW
+// to be added 
+
 #define M2_NFL                  0 // M1/M2-M3/
 #define M2_3X3_UNI_INJECT       0 //  M0-M1/M2-M4/OW
 #define M2_3X3_BI_INJECT        0 //  M0-M1/M2-M4/OW
@@ -45,7 +58,13 @@ extern "C" {
 #define M2_INTRA                0 // M1/M2-M3/
 
 #define M3_DEPTH                0
+
 #define M4_NFL                  0
+#define M4_DEPTH                0 
+#define M4_IP_LEVEL             0 
+#define M4_TX_RS                0 
+#define CU_LOOP_FILTER          0
+
 
 #define M1_candidate            0
 #define M2_candidate            0

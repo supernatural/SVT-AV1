@@ -1098,7 +1098,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                              Interpolation search at fast loop
 
 #if NEW_PRESETS
-#if M2_IP_LEVEL
+#if M4_IP_LEVEL 
+    if (picture_control_set_ptr->temporal_layer_index == 0)
+        picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP_UV_BLIND;
+    else
+        picture_control_set_ptr->interpolation_search_level = IT_SEARCH_OFF;
+#elif M2_IP_LEVEL
         if (picture_control_set_ptr->is_used_as_reference_flag)
             picture_control_set_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP_UV_BLIND;
         else
@@ -1191,6 +1196,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
 
 #endif
+#if M1_LOOP_FILTER
+        picture_control_set_ptr->loop_filter_mode = picture_control_set_ptr->is_used_as_reference_flag ? 3 : 0;
+#elif CU_LOOP_FILTER
+        picture_control_set_ptr->loop_filter_mode = 1;
+#else
 #if LOOP_FILTER_FIX
         if (picture_control_set_ptr->enc_mode == ENC_M0)
             picture_control_set_ptr->loop_filter_mode = 3;
@@ -1203,6 +1213,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->loop_filter_mode = 3;
         else
             picture_control_set_ptr->loop_filter_mode = 1;
+#endif
 #endif
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M3)
@@ -1430,7 +1441,13 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set tx search reduced set falg (0: full tx set; 1: reduced tx set; 1: two tx))
 #if NEW_PRESETS
-#if M2_TX_RS
+#if M4_TX_RS
+
+    if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
+        picture_control_set_ptr->tx_search_reduced_set = 0;
+    else
+        picture_control_set_ptr->tx_search_reduced_set = 1;
+#elif M2_TX_RS
     if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
         picture_control_set_ptr->tx_search_reduced_set = 0;
     else
