@@ -34,7 +34,34 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define NEWM0_SC                          1
+
+#define NEW_SC                           1
+#define NEWM0_SC                         1
+
+#define M2_SG_                           1
+#define M2_WN_                           1
+#define M2_IF_                           1
+#define M2_FRAC_SR_METHOD_               1
+#define M2_64X64_FRAC_SR_METHOD_         1
+#define M5_IF_BLK_SIZE_                  1
+
+
+#define NEWM1_SC                         0
+#define NEWM2_SC                         0
+
+#if NEW_SC
+
+#if NEWM1_SC
+#define M1_MRP_                          1  
+#define M2_DECOUPLEINTRA_INTER_          1
+#endif
+
+#if NEWM2_SC
+#define M1_ATB_                          1 
+#define M2_NFL_                          1
+#endif
+
+#else
 
 #define SHUT_DECOUPLED_FAST_LOOP         0
 #define M1_NEARST_NEAR_                  0
@@ -44,14 +71,15 @@ extern "C" {
 #define M1_NSQ_TABLE_                    0
 #define M1_LOOP_FILTER_                  0
 #define M1_INTRA_PRED_                   0
-#define M1_ATB_                          1
+#define M1_ATB_                          0
 #define M1_MRP_MODE_                     0
 #define M1_DOWN_SAMPLE_FILTER_           0
-#define M1_ME_HME_                       0      
+#define M1_ME_HME_                       0  
+#define M1_MRP_                          0      
 
 #define M2_ME_HME_                       0
-#define M2_NFL_                          1
-#define M2_DECOUPLEINTRA_INTER_          1
+#define M2_NFL_                          0
+#define M2_DECOUPLEINTRA_INTER_          0
 #define M2_FASTLOOP_METHOD_              0
 #define M2_FL_ESCAPE_                    0
 #define M2_GOLBAL_MV_                    0
@@ -84,7 +112,7 @@ extern "C" {
 #define M5_DEPTH_                       0
 
 #define M6_ME_HME_                      0
-#define M6_REDUCE_BLK_ME_               0
+//#define M6_REDUCE_BLK_ME_               0
 
 #define M7_ME_HME_                      0
 #define M7_CHROMA_                      0
@@ -99,7 +127,7 @@ extern "C" {
 #define M8_ME_HME_                      0
 #define M8_TX_REDUCED_SET_              0
 #define M8_RESTORATION_                 0
-
+#endif
 #define BEST_Q_M0                         1 // disable all shortcuts into M0
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
 

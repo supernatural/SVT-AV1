@@ -1793,7 +1793,7 @@ EbErrorType prediction_structure_group_ctor(
     *predictionStructureGroupDblPtr = predictionStructureGroupPtr;
 
 #if MRP_M1
-#if NEWM0_SC
+#if M1_MRP_
     if (1) {
 #else
     if (enc_mode > ENC_M0) {
