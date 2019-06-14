@@ -1004,7 +1004,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_FULL;
 #if SCREEN_CONTENT_SETTINGS
         else if (sc_content_detected)
-#if M4_DEPTH_
+#if M4_DEPTH_ || M5_DEPTH_
                     picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
 #elif M3_DEPTH_
                 if (picture_control_set_ptr->temporal_layer_index == 0)
