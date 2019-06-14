@@ -34,6 +34,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define M2_NFL                  0 // M1/M2-M3/
+#define M2_3X3_UNI_INJECT       0 //  M0-M1/M2-M4/OW
+#define M2_3X3_BI_INJECT        0 //  M0-M1/M2-M4/OW
+#define M2_ME_SR_METHOD         0 //  M0-M1/OW
+#define M2_DEPTH                0 //  M0-M1/OW
+#define M2_IP_LEVEL             0 //  M0-M1/OW
+#define M2_TX_W                 0 //  M0-M1/OW
+#define M2_TX_RS                0 // M1/M2-M3/
+#define M2_INTRA                0 // M1/M2-M3/
+
+#define M3_DEPTH                0
+#define M4_NFL                  0
 
 #define M1_candidate            0
 #define M2_candidate            0
@@ -335,8 +347,9 @@ extern "C" {
 #define EIGTH_PEL_MV                                    0
 #define DISABLE_NSQ_TABLE_FOR_M0                        1 // On wil disable the nsq_table ordering algrithm. This is a temporarily adoption that will be disable once we comeup with a better ordreing mecanisme when MRP i ON.
 #define IMPROVED_SUBPEL_SEARCH                          1
+#if !M2_NFL && !M4_NFL
 #define DECOUPLED_FAST_LOOP                             1
-
+#endif
 #define FIX_TX_SEARCH_FOR_MR_MODE                       1
 
 #if BEST_Q_M0
