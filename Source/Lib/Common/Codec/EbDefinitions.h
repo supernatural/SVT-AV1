@@ -44,14 +44,14 @@ extern "C" {
 #define M1_NSQ_TABLE_                    0
 #define M1_LOOP_FILTER_                  0
 #define M1_INTRA_PRED_                   0
-#define M1_ATB_                          0
+#define M1_ATB_                          1
 #define M1_MRP_MODE_                     0
 #define M1_DOWN_SAMPLE_FILTER_           0
 #define M1_ME_HME_                       0      
 
 #define M2_ME_HME_                       0
-#define M2_NFL_                          0
-#define M2_DECOUPLEINTRA_INTER_          0
+#define M2_NFL_                          1
+#define M2_DECOUPLEINTRA_INTER_          1
 #define M2_FASTLOOP_METHOD_              0
 #define M2_FL_ESCAPE_                    0
 #define M2_GOLBAL_MV_                    0
@@ -70,6 +70,35 @@ extern "C" {
 #define M2_TX_REDUCED_SET_               0
 #define M2_SUBPEL_                       0
 
+#define M3_ME_HME_                      0
+#define M3_DEPTH_                       0
+#define M3_IBC_MODE_                    0
+#define M3_INTRA_PRED_                  0
+    
+#define M4_ME_HME_                      0
+#define M4_ME_SR_METHOD_                0
+#define M4_DEPTH_                       0
+    
+#define M5_ME_HME_                      0
+#define M5_IF_BLK_SIZE_                 0
+#define M5_DEPTH_                       0
+
+#define M6_ME_HME_                      0
+#define M6_REDUCE_BLK_ME_               0
+
+#define M7_ME_HME_                      0
+#define M7_CHROMA_                      0
+#define M7_SPATIAL_SSE_FL_              0
+#define M7_UPDATE_CDF_                  0
+#define M7_HME_SR_METHOD_               0
+#define M7_TX_SEARCH_                   0
+#define M7_INTRA_PRED_                  0
+#define M7_TX_REDUCED_SET_              0
+
+    
+#define M8_ME_HME_                      0
+#define M8_TX_REDUCED_SET_              0
+#define M8_RESTORATION_                 0
 
 #define BEST_Q_M0                         1 // disable all shortcuts into M0
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag

@@ -100,7 +100,20 @@ void* set_me_hme_params_oq(
 {
     UNUSED(sequence_control_set_ptr);
     uint8_t  hmeMeLevel =  picture_control_set_ptr->enc_mode; // OMK to be revised after new presets
-#if M2_ME_HME_
+
+#if M8_ME_HME_
+    hmeMeLevel = ENC_M8;
+#elif M7_ME_HME_
+    hmeMeLevel = ENC_M7;
+#elif M6_ME_HME_
+    hmeMeLevel = ENC_M6;
+#elif  M5_ME_HME_
+    hmeMeLevel = ENC_M5;
+#elif M4_ME_HME_
+    hmeMeLevel = ENC_M4;
+#elif M3_ME_HME_    
+    hmeMeLevel = ENC_M3;
+#elif M2_ME_HME_
     hmeMeLevel = ENC_M2;
 #elif M1_ME_HME_
     hmeMeLevel = ENC_M1;
@@ -277,10 +290,14 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->sc_content_detected)
+#if M7_HME_SR_METHOD_
+            context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
         else
             context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#endif
     else
 #endif
     context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
@@ -301,10 +318,14 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->sc_content_detected)
+#if M4_ME_SR_METHOD_
+            context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M3)
             context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
         else
             context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
+#endif
     else
 #endif
     context_ptr->me_context_ptr->me_search_method = (picture_control_set_ptr->enc_mode <= ENC_M1) ?

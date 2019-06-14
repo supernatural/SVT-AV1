@@ -1306,6 +1306,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SEARCH_UV_MODE
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#if M7_CHROMA_
+            if (picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index == 0)
+                context_ptr->chroma_level = CHROMA_MODE_1;
+            else
+                context_ptr->chroma_level = (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT) ?
+                CHROMA_MODE_2 :
+                CHROMA_MODE_3;
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M6)
             context_ptr->chroma_level = CHROMA_MODE_1;
         else
@@ -1315,6 +1323,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->chroma_level = (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT) ?
                 CHROMA_MODE_2 :
                 CHROMA_MODE_3;
+#endif
     else
 #endif
 #if CHROMA_SEARCH_MR    
@@ -1580,10 +1589,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1                    ON for 16x16 and above
     // 2                    ON for 32x32 and above
 #if NEW_PRESETS
+#if M5_IF_BLK_SIZE_
+        context_ptr->interpolation_filter_search_blk_size = 1;
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->interpolation_filter_search_blk_size = 0;
     else
         context_ptr->interpolation_filter_search_blk_size = 1;
+#endif
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
         context_ptr->interpolation_filter_search_blk_size = 0;
@@ -1603,10 +1616,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#if M7_SPATIAL_SSE_FL_
+            context_ptr->spatial_sse_full_loop = EB_FALSE;
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M6)
             context_ptr->spatial_sse_full_loop = EB_TRUE;
         else
             context_ptr->spatial_sse_full_loop = EB_FALSE;
+#endif
     else
 #endif
     if (picture_control_set_ptr->enc_mode <= ENC_M4)
