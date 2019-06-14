@@ -1306,7 +1306,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SEARCH_UV_MODE
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if M7_CHROMA_
+#if NORAML_CH
+    if (picture_control_set_ptr->enc_mode == ENC_M0 && picture_control_set_ptr->temporal_layer_index == 0)
+
+        context_ptr->chroma_level = CHROMA_MODE_0;
+    else
+        
+        context_ptr->chroma_level = CHROMA_MODE_1;
+#elif M7_CHROMA_
             if (picture_control_set_ptr->parent_pcs_ptr->temporal_layer_index == 0)
                 context_ptr->chroma_level = CHROMA_MODE_1;
             else

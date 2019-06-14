@@ -38,13 +38,7 @@ extern "C" {
 #define NEW_SC                           1
 #define NEWM0_SC                         1
 
-#define M2_SG_                           1
-#define M2_WN_                           1
-#define M2_IF_                           1
-#define M2_FRAC_SR_METHOD_               1
-#define M2_64X64_FRAC_SR_METHOD_         1
-#define M5_IF_BLK_SIZE_                  1
-
+#define NORAML_CH                       1
 
 #define NEWM1_SC                         0
 #define NEWM2_SC                         0
