@@ -35,11 +35,45 @@
 extern "C" {
 #endif
 
-#define MRP_L432_OFF            0
-#define MRP_L43_OFF             0
+#define M1_candidate            0
+#define M2_candidate            0
+
+#if M1_candidate||M2_candidate
+#define M1_INTRA_PRED           1 // M0 -M1 - OW*
+#define FIX_ATB_SUPPORT         1 // ENABLE_SKIP_REDUNDANT_BLOCK
+
+#else
 #define M1_INTRA_PRED           0 // M0 -M1 - OW*
 #define FIX_ATB_SUPPORT         0 // ENABLE_SKIP_REDUNDANT_BLOCK
-#define M1_MRP                  0
+#endif
+
+#if M1_candidate && ! M2_candidate
+#define MRP_L43_OFF            1
+#endif
+#define APPLY_3X3_FOR_BEST_ME                           1 // Might need to be restricted to M0
+
+
+#define MRP_L432_OFF            0
+
+#if M2_candidate
+
+#if APPLY_3X3_FOR_BEST_ME 
+#define BEST_CANDIDATE_COUNT              2
+#endif
+#define M1_MRP                            1
+#define SHUT_ATB                          1 // ATB multi-mode signal
+#define SHUT_128x128                      1  
+
+#else
+#define M1_MRP                            0
+#define SHUT_ATB                          0 // ATB multi-mode signal
+#if APPLY_3X3_FOR_BEST_ME 
+#define BEST_CANDIDATE_COUNT              4
+#endif
+#define SHUT_128x128                      0  
+#endif
+
+
 
 #define BEST_Q_M0                         1 // disable all shortcuts into M0
 #define ALT_REF_SUPPORT                   1// ALT_REF main flag
@@ -80,7 +114,7 @@ extern "C" {
 #if ATB_DC_CONTEXT_SUPPORT_1 && ATB_DC_CONTEXT_SUPPORT_2
 #define DC_SIGN_CONTEXT_FIX               1 // Fixed DC level derivation and update @ mode decision
 #endif
-#define SHUT_ATB                          0 // ATB multi-mode signal
+
 #endif
 
 #define CHROMA_SEARCH_FIX                 1 // Fix a few bugs related to Chroma search
@@ -312,14 +346,12 @@ extern "C" {
 #if DECOUPLED_FAST_LOOP
 #define IMPROVED_NFL_SETTINGS                           1 // Used NRF 8,8,8 and Ref 16,16,16 NFL settings
 #endif
-#define APPLY_3X3_FOR_BEST_ME                           1 // Might need to be restricted to M0
-#if APPLY_3X3_FOR_BEST_ME 
-#define BEST_CANDIDATE_COUNT                            4
-#endif
+
 #define USE_MR_SP                                       0 
 #define USE_MR_CHROMA                                   0
 #define USE_MR_ATB                                      0
 #define ALT_REF_Y_UV_SEPERATE_FILTER_STRENGTH           1 // TUNED FILTER STRENGTH FOR LUMA AND CHROMA
+
 #else
 #define CAPPED_ME_CANDIDATES_NUM                        1 // Capped the ME-output adaptively based on the block size
 #if CAPPED_ME_CANDIDATES_NUM
@@ -338,9 +370,15 @@ extern "C" {
 #define     INTER_PRED_NFL  8
 #else
 #if IMPROVED_NFL_SETTINGS
+#if M2_candidate
+#define     INTRA_NFL       12
+#define     INTER_NEW_NFL   12
+#define     INTER_PRED_NFL  12
+#else
 #define     INTRA_NFL       16
 #define     INTER_NEW_NFL   16
 #define     INTER_PRED_NFL  16
+#endif
 #else
 #define     INTRA_NFL       10
 #define     INTER_NEW_NFL   10
