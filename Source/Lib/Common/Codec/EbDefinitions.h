@@ -193,7 +193,7 @@ extern "C" {
 #define MRP_L432_OFF            0
 
 #if M2_candidate
-
+#define NEW_M2_NFL  1
 #if APPLY_3X3_FOR_BEST_ME 
 #define BEST_CANDIDATE_COUNT              2
 #endif

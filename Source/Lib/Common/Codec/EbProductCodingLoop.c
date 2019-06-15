@@ -696,6 +696,74 @@ uint32_t nfl_non_ref[6] = {
     2, // 128x128
 };
 #endif
+#if DECOUPLED_FAST_LOOP
+uint32_t set_nfl(
+    PictureControlSet       *picture_control_set_ptr,
+    ModeDecisionContext     *context_ptr
+) {
+    // NFL Level MD       Settings
+    // 0                  48      // 
+    // 1                  30
+    // 2                  12
+    // 3                  10
+    // 4                  8
+    // 5                  6
+    // 6                  4
+    // 7                  3
+    uint32_t full_recon_search_count = 0;
+    switch (context_ptr->nfl_level) {
+    case 0:
+#if NEW_M2_NFL
+        full_recon_search_count = (picture_control_set_ptr->slice_type == I_SLICE) ?
+            context_ptr->full_recon_search_count :
+            (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ?
+            36 : 18;
+#else
+        full_recon_search_count = (picture_control_set_ptr->slice_type == I_SLICE) ?
+            context_ptr->full_recon_search_count :
+            (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ?
+            48 : 24;
+#endif
+        break;
+    case 1:
+        full_recon_search_count = 30;
+        break;
+    case 2:
+        full_recon_search_count = 12;
+        break;
+    case 3:
+        full_recon_search_count = 10;
+        break;
+    case 4:
+        full_recon_search_count = 8;
+        break;
+    case 5:
+        full_recon_search_count = 6;
+        break;
+    case 6:
+        full_recon_search_count = 4;
+        break;
+    case 7:
+        full_recon_search_count = 3;
+        break;
+    default:
+        full_recon_search_count = 4;
+        break;
+    }
+#if NFL_PER_SQ_SIZE
+    uint8_t nfl_index = LOG2F(context_ptr->blk_geom->sq_size) - 2;
+    if (picture_control_set_ptr->slice_type == I_SLICE)
+        context_ptr->full_recon_search_count = 6;
+    else if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+        context_ptr->full_recon_search_count = nfl_ref[nfl_index];
+    else
+        context_ptr->full_recon_search_count = nfl_non_ref[nfl_index];
+#endif
+
+    ASSERT(context_ptr->full_recon_search_count <= MAX_NFL);
+    return full_recon_search_count;
+}
+#else
 void set_nfl(
 #if NFL_PER_SQ_SIZE
     PictureControlSet       *picture_control_set_ptr,
@@ -751,12 +819,10 @@ void set_nfl(
         context_ptr->full_recon_search_count = nfl_non_ref[nfl_index];
 #endif
 
-#if DECOUPLED_FAST_LOOP
-    context_ptr->full_recon_search_count = MAX_NFL;
-#endif
+
     ASSERT(context_ptr->full_recon_search_count <= MAX_NFL);
 }
-
+#endif
 #if OPT_LOSSLESS_0
 #define TOTAL_SQ_BLOCK_COUNT 341
 int sq_block_index[TOTAL_SQ_BLOCK_COUNT] = {
@@ -4192,21 +4258,21 @@ void AV1PerformFullLoop(
     uint32_t nfl_intra_cnt = 0;
     uint32_t nfl_inter_new_cnt = 0;
     uint32_t nfl_inter_pred_cnt = 0;
-#if OPT_NFL_SETTINGS
-    uint32_t max_nfl_intra      = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? INTRA_NFL       : 3;
-    uint32_t max_nfl_inter_new  = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? INTER_NEW_NFL   : 3;
-    uint32_t max_nfl_inter_pred = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? INTER_PRED_NFL  : 4;
-#else
-#if IMPROVED_NFL_SETTINGS
-    uint32_t max_nfl_intra = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)       ? INTRA_NFL         : (INTRA_NFL >> 1);
-    uint32_t max_nfl_inter_new = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)   ? INTER_NEW_NFL     : (INTER_NEW_NFL >> 1);
-    uint32_t max_nfl_inter_pred = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)  ? INTER_PRED_NFL    : (INTER_PRED_NFL >> 1);
-#else
-    uint32_t max_nfl_intra      = INTRA_NFL;
-    uint32_t max_nfl_inter_new  = INTER_NEW_NFL;
-    uint32_t max_nfl_inter_pred = INTER_PRED_NFL;
-#endif
-#endif
+    uint32_t max_nfl_intra     ;// = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)  ? INTRA_NFL         : (INTRA_NFL >> 1);
+    uint32_t max_nfl_inter_new ;// = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)  ? INTER_NEW_NFL     : (INTER_NEW_NFL >> 1);
+    uint32_t max_nfl_inter_pred;// = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)  ? INTER_PRED_NFL    : (INTER_PRED_NFL >> 1);
+    uint32_t recon_count = set_nfl( picture_control_set_ptr,
+                                    context_ptr);
+
+    if (picture_control_set_ptr->slice_type == I_SLICE) {
+        max_nfl_intra      = MIN(recon_count, fullCandidateTotalCount);
+        max_nfl_inter_new  = 0;
+        max_nfl_inter_pred = 0;
+    }else{
+        max_nfl_intra       = MAX(recon_count / 3, 1);
+        max_nfl_inter_new   = MAX(recon_count / 3, 1);
+        max_nfl_inter_pred  = MAX(recon_count / 3, 1);
+    }
 #else
     uint8_t       candidateIndex;
 #endif
@@ -4248,7 +4314,7 @@ void AV1PerformFullLoop(
         // Set the Candidate Buffer
         candidateBuffer = candidate_buffer_ptr_array[candidateIndex];
         candidate_ptr = candidateBuffer->candidate_ptr;//this is the FastCandidateStruct
-
+        // this might need to be double checked after DECOUPLED_FAST_LOOP
         if (picture_control_set_ptr->slice_type != I_SLICE) {
             if ((candidate_ptr->type == INTRA_MODE || context_ptr->full_loop_escape == 2) && best_inter_luma_zero_coeff == 0) {
                 // Update # of NFL
@@ -4279,6 +4345,14 @@ void AV1PerformFullLoop(
             }
             if (candidate_ptr->type == INTER_MODE && candidate_ptr->is_new_mv == 0) {
                 max_nfl_inter_pred++;
+            }
+        }else{
+            if (nfl_intra_cnt >= max_nfl_intra && candidate_ptr->type == INTRA_MODE) {
+                *candidateBuffer->full_cost_ptr = MAX_MODE_COST;
+                continue;
+            }
+            if (candidate_ptr->type == INTRA_MODE) {
+                nfl_intra_cnt++;
             }
         }
 #endif
@@ -5922,12 +5996,16 @@ void md_encode_block(
                                                   is_complete_sb,
                                                   lcuAddr);
 #endif
+#if DECOUPLED_FAST_LOOP
+        context_ptr->full_recon_search_count = MAX_NFL; // pass all fast loop candidates to the full loop
+#else
         set_nfl(
 #if NFL_PER_SQ_SIZE
             picture_control_set_ptr,
 #endif
             context_ptr
         );
+#endif
 
 #if SEARCH_UV_MODE
         // Initialize uv_search_path

@@ -1250,7 +1250,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nfl_level = 2;
     else
         context_ptr->nfl_level = 4;
+#elif NEW_M0_NFL || NEW_M1_NFL || NEW_M2_NFL
+    context_ptr->nfl_level = 0;
 #else
+
+#if DECOUPLED_FAST_LOOP
+    if (picture_control_set_ptr->enc_mode <= ENC_M0)
+        context_ptr->nfl_level = 0;
+    else
+#endif
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
         if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
             context_ptr->nfl_level = (sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER) ? 0 : 1;

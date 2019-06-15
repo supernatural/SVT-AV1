@@ -856,6 +856,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     //  PIC_SQ_DEPTH_MODE                    ONLY sq: SB size -> 4x4
     //  PIC_SQ_NON4_DEPTH_MODE               ONLY sq: SB size -> 8x8  (No 4x4)
 
+// M3_DEPTH: PIC_SQ_NON4_DEPTH_MODE + NSQ_OFF 350%
+// NSQ_OFF + PIC_SQ_DEPTH_MODE 245%
+// T0: ENABLE TABLES + PIC_ALL_C_DEPTH_MODE +  NSQ_SEARCH_LEVEL1    100%
+// ENABLE TABLES + M2_DEPTH [PIC_ALL_DEPTH_MODE + REF:NSQ_SEARCH_LEVEL5, NREF:NSQ_SEARCH_LEVEL3] 23%
+
+
     uint8_t sc_content_detected = picture_control_set_ptr->sc_content_detected;
 
 #if SCREEN_CONTENT_SETTINGS && PCS_ME_FIX
