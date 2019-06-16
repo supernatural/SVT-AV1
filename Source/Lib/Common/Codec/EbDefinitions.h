@@ -43,6 +43,10 @@ extern "C" {
 #define NEW_M1_SC                           1
 #define NEW_M2_SC                           1
 #define NEW_M3_SC                           1
+#define NEW_M4_SC                           1
+#define NEW_M5_SC                           1
+#define NEW_M6_SC                           1
+#define NEW_M7_SC                           1
 
 // NEW M0 SC
 #if NEW_M0_SC
@@ -79,7 +83,9 @@ extern "C" {
 #define SC_M3_DEPTH_                        1 
 #define SC_M1_NSQ_TABLE_                    1
 #endif
-
+    
+// NEW M4 SC
+#if NEW_M4_SC   
 //G7
 #define SC_M4_DEPTH_                        1
 //G9
@@ -88,8 +94,8 @@ extern "C" {
 //g10
 #define SC_M4_ME_HME_                       1
 
-    //G11_2
-#define SC_M1_INTRA_PRED_                   0
+//G11_2
+#define SC_M1_INTRA_PRED_                   1
 #define SC_M2_LOOP_FILTER_                  1
 #define SC_M2_FASTLOOP_METHOD_              1
 
@@ -109,29 +115,39 @@ extern "C" {
 #define SC_M1_NEARST_NEAR_                  1
 #define SC_M1_MRP_MODE_                     1
 #define SC_M2_SG_                           1  
-    
-//g12
+//g12 M4
 #define SC_M5_ME_HME_                       1 
-    
-    // rebase
- #define SC_M5_IBC_                          1
- #define SC_M5_ME_HME_                       1
+#endif
+
+// NEW M5 SC
+#if NEW_M5_SC  
+    // M5
+ #define SC_M5_IBC_                          1   
+ #define SC_M4_ME_SR_METHOD_                 1
  #define SC_M5_DEPTH_                        1
  #define SC_M6_ME_HME_                       1
- #define SC_M7_ME_HME_                       1
- #define SC_M7_CHROMA_                       1
  #define SC_M7_SPATIAL_SSE_FL_               1
  #define SC_M7_UPDATE_CDF_                   1
+ #define SC_M7_INTRA_PRED_                   1
+#endif
+
+// NEW M6 SC
+#if NEW_M6_SC  
+ // M6
+ #define SC_M8_RESTORATION_                  1
+ #define SC_M8_TX_REDUCED_SET_               1 
+#endif
+// NEW M7 SC
+#if NEW_M7_SC  
+    // M7
+ #define SC_M7_ME_HME_                       1
+ #define SC_M7_CHROMA_                       1
  #define SC_M7_HME_SR_METHOD_                1
  #define SC_M7_TX_SEARCH_                    1
- #define SC_M7_INTRA_PRED_                   1
  #define SC_M7_TX_REDUCED_SET_               1    
  #define SC_M8_ME_HME_                       1
- #define SC_M8_TX_REDUCED_SET_               1
- #define SC_M8_RESTORATION_                  1
- #define SC_M7_CDF_                          1
-    
-#define SC_M4_ME_SR_METHOD_                 1
+#endif
+
 #else
     
 //#define SC_SHUT_DECOUPLED_FAST_LOOP         0
