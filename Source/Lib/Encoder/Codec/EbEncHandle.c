@@ -2275,7 +2275,11 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
 #endif
     //0: ON
     //1: OFF
+#if SC_M7_CDF_
+    sequence_control_set_ptr->cdf_mode = (uint8_t)  1;
+#else
     sequence_control_set_ptr->cdf_mode = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M6) ? 0 : 1;
+#endif
 
     //0: NSQ absent
     //1: NSQ present

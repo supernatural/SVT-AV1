@@ -409,7 +409,11 @@ void reset_mode_decision(
 
 #if ENABLE_WARPED_MV
 #if NEW_PRESETS
+#if SC_M2_WARPED_
+    EbBool enable_wm =  EB_FALSE ;
+#else
     EbBool enable_wm = (picture_control_set_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) || MR_MODE ? EB_TRUE : EB_FALSE;
+#endif
 #else
     EbBool enable_wm = (picture_control_set_ptr->parent_pcs_ptr->enc_mode == ENC_M0) || MR_MODE ? EB_TRUE : EB_FALSE;
 #endif

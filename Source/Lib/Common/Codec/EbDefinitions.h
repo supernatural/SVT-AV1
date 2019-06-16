@@ -39,9 +39,10 @@ extern "C" {
 #define NEW_SC                           1
 #if NEW_SC
     
-#define NEW_M0_SC                           0
-#define NEW_M1_SC                           0
-#define NEW_M2_SC                           0
+#define NEW_M0_SC                           1
+#define NEW_M1_SC                           1
+#define NEW_M2_SC                           1
+#define NEW_M3_SC                           1
 
 // NEW M0 SC
 #if NEW_M0_SC
@@ -70,50 +71,108 @@ extern "C" {
 #define SC_M1_ATB_                          1 
 #define SC_M2_NFL_                          1
 #define SC_M2_ME_HME_                       1
+#endif    
+// NEW M3 SC
+#if NEW_M3_SC   
+#define SC_M3_ME_HME_                       1
+#define SC_M2_DEPTH_                        1
+#define SC_M3_DEPTH_                        1 
+#define SC_M1_NSQ_TABLE_                    1
 #endif
 
+//G7
+#define SC_M4_DEPTH_                        1
+//G9
+#define SC_M3_IBC_MODE_                     1
+#define SC_M3_INTRA_PRED_                   1
+//g10
+#define SC_M4_ME_HME_                       1
 
+    //G11_2
+#define SC_M1_INTRA_PRED_                   0
+#define SC_M2_LOOP_FILTER_                  1
+#define SC_M2_FASTLOOP_METHOD_              1
+
+#define SC_M2_FL_ESCAPE_                    1
+#define SC_M2_CDEF_                         1
+#define SC_M2_3X3_UNI_                      1
+#define SC_M2_3X3_BI_                       1
+#define SC_M2_WN_                           1
+#define SC_M1_DOWN_SAMPLE_FILTER_           1
+#define SC_M1_Q_FP_                         1 
+#define SC_M1_LOOP_FILTER_                  1
+#define SC_M2_GOLBAL_MV_                    1
+#define SC_M2_TX_REDUCED_SET_               1 
+#define SC_M1_4N_N4_                        1
+#define SC_M1_TRELLIS_                      1  
+#define SC_M2_REDUD_BLOCK_                  1 
+#define SC_M1_NEARST_NEAR_                  1
+#define SC_M1_MRP_MODE_                     1
+#define SC_M2_SG_                           1  
+    
+//g12
+#define SC_M5_ME_HME_                       1 
+    
+    // rebase
+ #define SC_M5_IBC_                          1
+ #define SC_M5_ME_HME_                       1
+ #define SC_M5_DEPTH_                        1
+ #define SC_M6_ME_HME_                       1
+ #define SC_M7_ME_HME_                       1
+ #define SC_M7_CHROMA_                       1
+ #define SC_M7_SPATIAL_SSE_FL_               1
+ #define SC_M7_UPDATE_CDF_                   1
+ #define SC_M7_HME_SR_METHOD_                1
+ #define SC_M7_TX_SEARCH_                    1
+ #define SC_M7_INTRA_PRED_                   1
+ #define SC_M7_TX_REDUCED_SET_               1    
+ #define SC_M8_ME_HME_                       1
+ #define SC_M8_TX_REDUCED_SET_               1
+ #define SC_M8_RESTORATION_                  1
+ #define SC_M7_CDF_                          1
+    
+#define SC_M4_ME_SR_METHOD_                 1
 #else
     
-#define SC_SHUT_DECOUPLED_FAST_LOOP         0
+//#define SC_SHUT_DECOUPLED_FAST_LOOP         0
 #define SC_M1_NEARST_NEAR_                  0
 #define SC_M1_4N_N4_                        0
 #define SC_M1_TRELLIS_                      0
 #define SC_M1_Q_FP_                         0
-#define SC_M1_NSQ_TABLE_                    0
+//#define SC_M1_NSQ_TABLE_                    0
 #define SC_M1_LOOP_FILTER_                  0
 #define SC_M1_INTRA_PRED_                   0
-#define SC_M1_ATB_                          0
+//#define SC_M1_ATB_                          0
 #define SC_M1_MRP_MODE_                     0
 #define SC_M1_DOWN_SAMPLE_FILTER_           0
-#define SC_M1_ME_HME_                       0  
-#define SC_M1_MRP_                          0  
-#define SC_M1_64SB_                         0    
+//#define SC_M1_ME_HME_                       0  
+//#define SC_M1_MRP_                          0  
+//#define SC_M1_64SB_                         0    
 
-#define SC_M2_ME_HME_                       0
-#define SC_M2_NFL_                          0
-#define SC_M2_DECOUPLEINTRA_INTER_          0
+//#define SC_M2_ME_HME_                       0
+//#define SC_M2_NFL_                          0
+//#define SC_M2_DECOUPLEINTRA_INTER_          0
 #define SC_M2_FASTLOOP_METHOD_              0
 #define SC_M2_FL_ESCAPE_                    0
 #define SC_M2_GOLBAL_MV_                    0
-#define SC_M2_WARPED_                       0
+//#define SC_M2_WARPED_                       0
 #define SC_M2_3X3_UNI_                      0
 #define SC_M2_3X3_BI_                       0
 #define SC_M2_REDUD_BLOCK_                  0
-#define SC_M2_FRAC_SR_METHOD_               0
-#define SC_M2_64X64_FRAC_SR_METHOD_         0
-#define SC_M2_DEPTH_                        0
-#define SC_M2_IF_                           0
+//#define SC_M2_FRAC_SR_METHOD_               0
+//#define SC_M2_64X64_FRAC_SR_METHOD_         0
+//#define SC_M2_DEPTH_                        0
+//#define SC_M2_IF_                           0
 #define SC_M2_LOOP_FILTER_                  0
 #define SC_M2_CDEF_                         0
 #define SC_M2_SG_                           0
 #define SC_M2_WN_                           0
 #define SC_M2_TX_REDUCED_SET_               0
-#define SC_M2_SUBPEL_                       0
-#define SC_M2_8x8_                          0
+//#define SC_M2_SUBPEL_                       0
+//#define SC_M2_8x8_                          0
 
-#define SC_M3_ME_HME_                       0
-#define SC_M3_DEPTH_                        0
+//#define SC_M3_ME_HME_                       0
+//#define SC_M3_DEPTH_                        0
 #define SC_M3_IBC_MODE_                     0
 #define SC_M3_INTRA_PRED_                   0
     
@@ -122,7 +181,7 @@ extern "C" {
 #define SC_M4_DEPTH_                        0
     
 #define SC_M5_ME_HME_                       0
-#define SC_M5_IF_BLK_SIZE_                  0
+//#define SC_M5_IF_BLK_SIZE_                  0
 #define SC_M5_DEPTH_                        0
 
 #define SC_M6_ME_HME_                       0
