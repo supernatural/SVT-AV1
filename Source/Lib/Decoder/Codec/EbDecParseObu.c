@@ -1564,7 +1564,7 @@ void read_uncompressed_header(bitstrm_t *bs, SeqHeader *seq_header,
             frame_info->ref_order_hint[i] = 0;
         }
         for (i = 0; i < TOTAL_REFS_PER_FRAME; i++)
-            frame_info->order_hints[LAST_FRAME + i] = 0;
+            frame_info->order_hints[LAST_FRAME - 1 + i] = 0;
     }
     frame_info->disable_cdf_update = dec_get_bits(bs, 1);
     PRINT_FRAME("disable_cdf_update", frame_info->disable_cdf_update);
