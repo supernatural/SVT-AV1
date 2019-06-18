@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 
-#define NEW_SC                           1
+#define NEW_SC                           0
 #if NEW_SC
     
 #define NEW_M0_SC                           1
