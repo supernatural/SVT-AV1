@@ -511,6 +511,7 @@ void apply_filtering_c(const uint8_t *y_src,
     memset(v_diff_sse, 0, BLK_PELS * sizeof(uint16_t));
 
     assert(use_whole_blk == 0);
+    _unused(use_whole_blk);
 
     // Calculate squared differences for each pixel of the block (pred-orig)
     calculate_squared_errors(y_src, y_src_stride, y_pre, y_pre_stride, y_diff_sse,
