@@ -3182,6 +3182,8 @@ static uint64_t cost_selected_tx_size(
         assert(!is_inter_block(mbmi));
         assert(IMPLIES(is_rect_tx(tx_size), is_rect_tx_allowed(/*xd,*/ mbmi)));
 
+        _unused(max_depths);
+
         /*aom_write_symbol(w, depth, ec_ctx->tx_size_cdf[tx_size_cat][tx_size_ctx],
             max_depths + 1);*/
         bits += md_rate_estimation_ptr->tx_size_fac_bits[tx_size_cat][tx_size_ctx][depth];

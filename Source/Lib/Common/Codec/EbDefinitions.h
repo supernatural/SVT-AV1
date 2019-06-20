@@ -2144,6 +2144,8 @@ typedef enum EbBitFieldMasks
 #define ASSERT(exp) ((void)sizeof(exp))
 #endif
 
+#define _unused(x) ((void)(x))
+
 #define    INTERPOLATION_NEED  4
 #define    BUFF_PITCH          (INTERPOLATION_NEED*2+64)
 #define    ME_FILTER_TAP       4
