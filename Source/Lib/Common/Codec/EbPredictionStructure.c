@@ -1791,7 +1791,32 @@ EbErrorType prediction_structure_group_ctor(
     PredictionStructureGroup *predictionStructureGroupPtr;
     EB_MALLOC(PredictionStructureGroup*, predictionStructureGroupPtr, sizeof(PredictionStructureGroup), EB_N_PTR);
     *predictionStructureGroupDblPtr = predictionStructureGroupPtr;
+#if M1_CONST_MRP
 
+    if (1) {
+
+        for (int gop_i = 1; gop_i < 8; ++gop_i) {
+
+            if (gop_i % 4)
+
+                for (int i = 1; i < 4; ++i) {
+                    four_level_hierarchical_pred_struct[gop_i].ref_list0[i] = 0;
+                    four_level_hierarchical_pred_struct[gop_i].ref_list1[i] = 0;
+                }
+        }
+
+        for (int gop_i = 1; gop_i < 16; ++gop_i) {
+
+            if (gop_i % 4)
+
+                for (int i = 1; i < 4; ++i) {
+                    five_level_hierarchical_pred_struct[gop_i].ref_list0[i] = 0;
+                    five_level_hierarchical_pred_struct[gop_i].ref_list1[i] = 0;
+                }
+        }
+    }
+
+#else
 #if MRP_M1
 #if MRP_L432_OFF ||MRP_L43_OFF|| M1_MRP || SC_M1_MRP_
     if (1) {
@@ -1831,7 +1856,7 @@ EbErrorType prediction_structure_group_ctor(
         }
     }
 #endif
-
+#endif
     // Count the number of Prediction Structures
     while ((PredictionStructureConfigArray[predStructIndex].entry_array != 0) && (PredictionStructureConfigArray[predStructIndex].entry_count != 0)) {
         // Get Random Access + P for temporal ID 0

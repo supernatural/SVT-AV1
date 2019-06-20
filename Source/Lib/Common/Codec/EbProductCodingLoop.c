@@ -713,7 +713,7 @@ uint32_t set_nfl(
     uint32_t full_recon_search_count = 0;
     switch (context_ptr->nfl_level) {
     case 0:
-#if NEW_M2_NFL
+#if NEW_M2_NFL || M2_CONST_NFL
         full_recon_search_count = (picture_control_set_ptr->slice_type == I_SLICE) ?
             context_ptr->full_recon_search_count :
             (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ?

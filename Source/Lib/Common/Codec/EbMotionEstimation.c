@@ -13758,7 +13758,9 @@ EbErrorType motion_estimate_lcu(
 #if SC_M1_NSQ_TABLE_
     is_nsq_table_used =  is_nsq_table_used;
 #else
+#if !M3_NSQ_TABLE
     is_nsq_table_used = picture_control_set_ptr->enc_mode == ENC_M0 ? EB_FALSE : is_nsq_table_used;
+#endif
 #endif
 #endif
 #endif

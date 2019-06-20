@@ -2241,7 +2241,12 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
 #if SC_M1_64SB_
     sequence_control_set_ptr->static_config.super_block_size       = 64;
 #else
+#if M3_SB_SIZE
+    sequence_control_set_ptr->static_config.super_block_size = 64;
+
+#else
     sequence_control_set_ptr->static_config.super_block_size       = (sequence_control_set_ptr->static_config.enc_mode == ENC_M0 && sequence_control_set_ptr->input_resolution >= INPUT_SIZE_1080i_RANGE) ? 128 : 64;
+#endif
 #endif
 #endif
 #else
@@ -2271,7 +2276,11 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
 #if SC_M1_MRP_MODE_
     sequence_control_set_ptr->mrp_mode = (uint8_t)   1;
 #else
+#if M3_MRP_MODE
+    sequence_control_set_ptr->mrp_mode = 1;
+#else
     sequence_control_set_ptr->mrp_mode = (uint8_t) (sequence_control_set_ptr->static_config.enc_mode == ENC_M0) ? 0 : 1;
+#endif
 #endif
     //0: ON
     //1: OFF
@@ -2296,7 +2305,11 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
         sequence_control_set_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
 #else
     if (sequence_control_set_ptr->static_config.enc_mode == ENC_M0)
+#if M3_DS_ME
+        sequence_control_set_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
+#else
         sequence_control_set_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
+#endif
     else
         sequence_control_set_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
 #endif

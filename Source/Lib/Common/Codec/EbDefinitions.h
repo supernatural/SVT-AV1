@@ -335,6 +335,50 @@ extern "C" {
 #define INCOMPLETE_SB_FIX                 1 // Handle the incomplete SBs properly based on the standard and consider all allowed blocks
 /**********************************************************************************/
 
+///*************************************************************///
+///****************** debugging modes***************************///
+// M1
+#define M1_CONST_MRP                      0 //1
+// M1 || M2
+#define M1_INTRA_PRED                     0 //1   
+#define FIX_ATB_SUPPORT                   0 //1 
+// M2
+#define M2_CONST_NFL                      0 //1
+#define SHUT_ATB                          0 //1 
+#define SHUT_128x128                      0 //1  
+//#if APPLY_3X3_FOR_BEST_ME 
+//#define BEST_CANDIDATE_COUNT              2
+//#endif
+
+// M2 || M3
+#define M1_MRP                            1
+// M3
+#define M3_CONST_CHROMA                   1
+#define M3_CONST_NFL                      1
+#define NEW_NEAREST_NEW_INJECTION         0
+#define ENHANCED_Nx4_4xN_NEW_MV           0
+#define M3_TRELLIS                        1
+#define M3_QUANT_FP                       1
+#define M3_NSQ_TABLE                      1
+#define M3_NSQ_LEVEL                      1
+#define M3_LOOP_FILTER                    1
+#define M3_INTRA_PRED_METHOD              1
+#define M3_ATB                            1
+#define M3_MRP_MODE                       1
+#define M3_DS_ME                          1
+#define M3_DECOUPLE_INTRA_INTER_FAST_LOOP 1
+#define M3_3X3_UNI_INJECT                 1
+#define M3_3X3_BI_INJECT                  1
+#define M3_ME_SEARCH_METHOD               1
+#define M3_INTERPOLATION_SEARCH_METHOD    1
+
+#define M3_IBC_MODE             1
+#define M3_TX_SEARCH            1
+#define M3_SB_SIZE              1
+#define M3_ME_SET               1
+///******************************************************************///
+///******************************************************************///
+
 // New  presets
 #define NEW_PRESETS                       1
 #define NEW_BUFF_CFG                      1
@@ -4493,7 +4537,78 @@ static const uint16_t hme_level2_search_area_in_height_array_bottom[SC_MAX_LEVEL
     }
 };
 #endif
+#if M3_ME_SET
+static const uint16_t search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
+    {
+#if M9_ME
+#if NEW_PRESETS
+    {  64, 64, 64, 64, 64, 64, 64, 64, 48, 16, 16, 16, 16 },
+    { 64,  112,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
+    { 64,  128,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
+    { 64,  128,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 }
+#else
+    {  64, 64, 64, 64, 64, 64, 48, 48, 48, 16, 16, 16, 16 },
+    { 112,   64,   64,   64,   64,   64,   48,   48,   48,   16,   16,    16,   16 },
+    { 128,   64,   64,   64,   64,   64,   48,   48,   48,   16,   16,    16,   16 },
+    { 128,   64,   64,   64,   64,   64,   48,   48,   48,   16,   16,    16,   16 }
+#endif
+#else
+    {  64, 64, 64, 64, 64, 64, 48, 48, 48, 48, 48, 48, 48 },
+    { 112,   64,   64,   64,   64,   64,   48,   48,   48,   48,   48,    48,   48 },
+    { 128,   64,   64,   64,   64,   64,   48,   48,   48,   48,   48,    48,   48 },
+    { 128,   64,   64,   64,   64,   64,   48,   48,   48,   48,   48,    48,   48 }
+#endif
+}, {
+#if SC_NEW_ME_SR        
+       {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+       {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+       {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+       {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 }
+#else
+        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 }
+#endif
+}
+};
+static const uint16_t search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
+    {
+#if M9_ME
+#if NEW_PRESETS
+        {  64,   64,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
+        { 64,  112,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
+        { 64,  128,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
+        { 64,  128,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 }
+#else
+        {  64,   64,   64,   32,   32,   32,   48,   48,   16,    9,    9,     9,    9 },
+        { 112,   64,   64,   32,   32,   32,   48,   48,   16,    9,    9,     9,    9 },
+        { 128,   64,   64,   32,   32,   32,   48,   48,   16,    9,    9,     9,    9 },
+        { 128,   64,   64,   32,   32,   32,   48,   48,   16,    9,    9,     9,    9 }
+#endif
+#else
+        {  64,   64,   64,   32,   32,   32,   48,   48,   16,   16,   16,    16,   16 },
+        { 112,   64,   64,   32,   32,   32,   48,   48,   16,   16,   16,    16,   16 },
+        { 128,   64,   64,   32,   32,   32,   48,   48,   16,   16,   16,    16,   16 },
+        { 128,   64,   64,   32,   32,   32,   48,   48,   16,   16,   16,    16,   16 }
+#endif
+    } , {
+ #if SC_NEW_ME_SR        
+        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 }
+#else
+        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 }
+#endif
+    }
 
+    //     M0    M1    M2    M3    M4    M5    M6    M7    M8    M9    M10    M11    M12
+};
+#else
 static const uint16_t search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
 #if M9_ME
@@ -4564,6 +4679,7 @@ static const uint16_t search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUP
 
     //     M0    M1    M2    M3    M4    M5    M6    M7    M8    M9    M10    M11    M12
 };
+#endif
 #else
 
 /******************************************************************************

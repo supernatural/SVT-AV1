@@ -1976,7 +1976,11 @@ void av1_quantize_inv_quantize(
 #if SC_M1_Q_FP_
     EbBool perform_quantize_fp =  EB_FALSE;
 #else
+#if M3_QUANT_FP
+    EbBool perform_quantize_fp = EB_FALSE;
+#else
     EbBool perform_quantize_fp = picture_control_set_ptr->enc_mode == ENC_M0 ? EB_TRUE : EB_FALSE;
+#endif
 #endif
 #else
     EbBool perform_quantize_fp = EB_FALSE;

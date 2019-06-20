@@ -1256,7 +1256,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
 #if DECOUPLED_FAST_LOOP
     if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#if M3_CONST_NFL
+        if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+            context_ptr->nfl_level = 2;
+        else
+            context_ptr->nfl_level = 4;
+#else
         context_ptr->nfl_level = 0;
+#endif
+
     else
 #endif
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
@@ -1356,7 +1364,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
 #endif
+#if M3_CONST_CHROMA
+        context_ptr->chroma_level = CHROMA_MODE_1;
+#else
         context_ptr->chroma_level = CHROMA_MODE_0;
+#endif
     else
 #endif
     if (picture_control_set_ptr->enc_mode <= ENC_M4)
@@ -1378,7 +1390,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->decouple_intra_inter_fast_loop = 1;
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#if M3_DECOUPLE_INTRA_INTER_FAST_LOOP
+            context_ptr->decouple_intra_inter_fast_loop = 1;
+#else
             context_ptr->decouple_intra_inter_fast_loop = 0;
+#endif
         else
             context_ptr->decouple_intra_inter_fast_loop = 1;
 #endif
@@ -1559,7 +1575,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->unipred3x3_injection = 2;
 #else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#if M3_3X3_UNI_INJECT
+        context_ptr->unipred3x3_injection = 2;
+#else
         context_ptr->unipred3x3_injection = 1;
+#endif
     else if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->unipred3x3_injection = 2;
     else
@@ -1596,7 +1616,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->bipred3x3_injection = 2;
 #else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#if M3_3X3_BI_INJECT
+        context_ptr->bipred3x3_injection = 2;
+#else
         context_ptr->bipred3x3_injection = 1;
+#endif
     else if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->bipred3x3_injection = 2;
     else
@@ -1693,7 +1717,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
+#if M3_TRELLIS
+        context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+#else
         context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
+#endif
     else
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
 #endif
