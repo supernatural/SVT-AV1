@@ -246,44 +246,9 @@ extern "C" {
 #define M4_TX_RS                0 
 #define CU_LOOP_FILTER          0
 
-
-#define M1_candidate            0
-#define M2_candidate            0
-
-#if M1_candidate||M2_candidate
-#define M1_INTRA_PRED           1 // M0 -M1 - OW*
 #define FIX_ATB_SUPPORT         1 // ENABLE_SKIP_REDUNDANT_BLOCK
-
-#else
-#define M1_INTRA_PRED           0 // M0 -M1 - OW*
-#define FIX_ATB_SUPPORT         0 // ENABLE_SKIP_REDUNDANT_BLOCK
-#endif
-
-#if M1_candidate && ! M2_candidate
-#define MRP_L43_OFF            1
-#endif
 #define APPLY_3X3_FOR_BEST_ME                           1 // Might need to be restricted to M0
 
-
-#define MRP_L432_OFF            0
-
-#if M2_candidate
-#define NEW_M2_NFL  1
-#if APPLY_3X3_FOR_BEST_ME 
-#define BEST_CANDIDATE_COUNT              2
-#endif
-#define M1_MRP                            1
-#define SHUT_ATB                          1 // ATB multi-mode signal
-#define SHUT_128x128                      1  
-
-#else
-#define M1_MRP                            0
-#define SHUT_ATB                          0 // ATB multi-mode signal
-#if APPLY_3X3_FOR_BEST_ME 
-#define BEST_CANDIDATE_COUNT              4
-#endif
-#define SHUT_128x128                      0  
-#endif
 
 
 
@@ -328,7 +293,7 @@ extern "C" {
 #endif
 
 #endif
-
+#define SHUT_ATB                          0 // ATB multi-mode signal
 #define CHROMA_SEARCH_FIX                 1 // Fix a few bugs related to Chroma search
 #define INTRA64_FIX                       1 // Fix a bug where 64x64 are disabled for sub 720P
 #define CHROMA_SEARCH_MR                  1 // Enable chroma search for all layers in MR mode
@@ -587,15 +552,9 @@ extern "C" {
 #define     INTER_PRED_NFL  8
 #else
 #if IMPROVED_NFL_SETTINGS
-#if M2_candidate
-#define     INTRA_NFL       12
-#define     INTER_NEW_NFL   12
-#define     INTER_PRED_NFL  12
-#else
 #define     INTRA_NFL       16
 #define     INTER_NEW_NFL   16
 #define     INTER_PRED_NFL  16
-#endif
 #else
 #define     INTRA_NFL       10
 #define     INTER_NEW_NFL   10
@@ -4498,10 +4457,10 @@ static const uint16_t search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPP
     {
 #if M9_ME
 #if NEW_PRESETS
-        {  64,   64,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
-        { 112,  112,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
-        { 128,  128,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
-        { 128,  128,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 }
+        {  64,   64,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },//omran m2
+        { 112,  112,  112,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
+        { 128,  128,  128,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
+        { 128,  128,  128,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 }
 #else
         {  64,   64,   64,   64,   64,   64,   48,   48,   48,   16,   16,    16,   16 },
         { 112,   64,   64,   64,   64,   64,   48,   48,   48,   16,   16,    16,   16 },
@@ -4533,9 +4492,9 @@ static const uint16_t search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUP
 #if M9_ME
 #if NEW_PRESETS
         {  64,   64,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
-        { 112,  112,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
-        { 128,  128,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
-        { 128,  128,   64,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 }
+        { 112,  112,  112,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
+        { 128,  128,  128,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
+        { 128,  128,  128,   64,   32,   32,   32,   32,   16,    9,    9,     9,    9 }
 #else
         {  64,   64,   64,   32,   32,   32,   48,   48,   16,    9,    9,     9,    9 },
         { 112,   64,   64,   32,   32,   32,   48,   48,   16,    9,    9,     9,    9 },

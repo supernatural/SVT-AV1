@@ -672,7 +672,7 @@ void Unipred3x3CandidatesInjection(
     ModeDecisionCandidate    *candidateArray = context_ptr->fast_candidate_array;
     EbBool isCompoundEnabled = (picture_control_set_ptr->parent_pcs_ptr->reference_mode == SINGLE_REFERENCE) ? 0 : 1;
     IntMv  bestPredmv[2] = { {0}, {0} };
-
+    uint32_t BEST_CANDIDATE_COUNT = picture_control_set_ptr->enc_mode >= ENC_M2 ? 2 : 4;//omran
     // (8 Best_L0 neighbors)
 #if MD_INJECTION
     //const MeLcuResults_t *meResults = pictureControlSetPtr->ParentPcsPtr->meResultsPtr[lcuAddr];
@@ -940,7 +940,7 @@ void Bipred3x3CandidatesInjection(
     ModeDecisionCandidate    *candidateArray = context_ptr->fast_candidate_array;
     EbBool isCompoundEnabled = (picture_control_set_ptr->parent_pcs_ptr->reference_mode == SINGLE_REFERENCE) ? 0 : 1;
     IntMv  bestPredmv[2] = { {0}, {0} };
-
+    uint32_t BEST_CANDIDATE_COUNT = picture_control_set_ptr->enc_mode >= ENC_M2 ? 2 : 4;//omran
     if (isCompoundEnabled) {
         /**************
        NEW_NEWMV

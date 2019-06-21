@@ -1793,21 +1793,13 @@ EbErrorType prediction_structure_group_ctor(
     *predictionStructureGroupDblPtr = predictionStructureGroupPtr;
 
 #if MRP_M1
-#if MRP_L432_OFF ||MRP_L43_OFF|| M1_MRP || SC_M1_MRP_
+#if SC_M1_MRP_
     if (1) {
 #else
     if (enc_mode > ENC_M0) {
 #endif
         for (int gop_i = 1; gop_i < 8; ++gop_i) {
-#if MRP_L432_OFF
-           if (gop_i % 8)
-#else
-
-#if MRP_L43_OFF
-           if (gop_i % 4)
-
-#endif
-#endif
+           if (enc_mode == ENC_M1 && gop_i % 4 || enc_mode >= ENC_M2)//omran
             for (int i = 1; i < 4; ++i) {
                 four_level_hierarchical_pred_struct[gop_i].ref_list0[i] = 0;
                 four_level_hierarchical_pred_struct[gop_i].ref_list1[i] = 0;
@@ -1815,15 +1807,7 @@ EbErrorType prediction_structure_group_ctor(
         }
 
         for (int gop_i = 1; gop_i < 16; ++gop_i) {
-#if MRP_L432_OFF
-           if (gop_i % 8)
-#else
-
-#if MRP_L43_OFF
-           if (gop_i % 4)
-
-#endif
-#endif
+           if (enc_mode == ENC_M1 && gop_i % 4 || enc_mode >= ENC_M2)//omran
             for (int i = 1; i < 4; ++i) {
                 five_level_hierarchical_pred_struct[gop_i].ref_list0[i] = 0;
                 five_level_hierarchical_pred_struct[gop_i].ref_list1[i] = 0;

@@ -1240,31 +1240,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     else
 #endif
-#if M4_NFL
-        if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
-            context_ptr->nfl_level = 4;
-        else
-            context_ptr->nfl_level = 5;
-#elif M2_NFL
-    if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
-        context_ptr->nfl_level = 2;
-    else
-        context_ptr->nfl_level = 4;
-#elif NEW_M0_NFL || NEW_M1_NFL || NEW_M2_NFL
-    context_ptr->nfl_level = 0;
-#else
 
 #if DECOUPLED_FAST_LOOP
-    if (picture_control_set_ptr->enc_mode <= ENC_M0)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2)//omran
         context_ptr->nfl_level = 0;
     else
 #endif
-    if (picture_control_set_ptr->enc_mode <= ENC_M1)
-        if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
-            context_ptr->nfl_level = (sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER) ? 0 : 1;
-        else
-            context_ptr->nfl_level = 2;
-    else if(picture_control_set_ptr->enc_mode <= ENC_M3)
+    //if (picture_control_set_ptr->enc_mode <= ENC_M1)
+    //    if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+    //        context_ptr->nfl_level = (sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER) ? 0 : 1;
+    //    else
+    //        context_ptr->nfl_level = 2;
+    if(picture_control_set_ptr->enc_mode <= ENC_M3)
         if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
             context_ptr->nfl_level = 2;
         else
@@ -1281,7 +1268,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->nfl_level = 6;
         else
             context_ptr->nfl_level = 7;
-#endif
+
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
 #if MOD_M0
@@ -1352,7 +1339,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #endif
 #if SEARCH_UV_BASE
-    if (picture_control_set_ptr->enc_mode == ENC_M0 && picture_control_set_ptr->temporal_layer_index == 0)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2 && picture_control_set_ptr->temporal_layer_index == 0)//omran
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
 #endif
@@ -1481,7 +1468,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SC_M1_NEARST_NEAR_
     context_ptr->new_nearest_near_comb_injection = 0;
 #else
-    if (picture_control_set_ptr->enc_mode == ENC_M0)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2) //omran
         context_ptr->new_nearest_near_comb_injection = 1;
     else
         context_ptr->new_nearest_near_comb_injection = 0;
@@ -1491,7 +1478,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SC_M1_4N_N4_
         context_ptr->nx4_4xn_parent_mv_injection = 0;
 #else
-    if (picture_control_set_ptr->enc_mode == ENC_M0)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2) //omran
         context_ptr->nx4_4xn_parent_mv_injection = 1;
     else
         context_ptr->nx4_4xn_parent_mv_injection = 0;
@@ -1558,7 +1545,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M2_3X3_UNI_INJECT
         context_ptr->unipred3x3_injection = 2;
 #else
-    if (picture_control_set_ptr->enc_mode <= ENC_M1)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2)//omran
         context_ptr->unipred3x3_injection = 1;
     else if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->unipred3x3_injection = 2;
@@ -1595,7 +1582,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M2_3X3_BI_INJECT
         context_ptr->bipred3x3_injection = 2;
 #else
-    if (picture_control_set_ptr->enc_mode <= ENC_M1)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2)//omran
         context_ptr->bipred3x3_injection = 1;
     else if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->bipred3x3_injection = 2;
@@ -1692,7 +1679,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SC_M1_TRELLIS_
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
 #else
-    if (picture_control_set_ptr->enc_mode == ENC_M0)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2) //omran
         context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
     else
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;

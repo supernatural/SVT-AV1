@@ -713,17 +713,18 @@ uint32_t set_nfl(
     uint32_t full_recon_search_count = 0;
     switch (context_ptr->nfl_level) {
     case 0:
-#if NEW_M2_NFL
-        full_recon_search_count = (picture_control_set_ptr->slice_type == I_SLICE) ?
+
+        if (picture_control_set_ptr->enc_mode == ENC_M2)//omran
+            full_recon_search_count = (picture_control_set_ptr->slice_type == I_SLICE) ?
             context_ptr->full_recon_search_count :
-            (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ?
-            36 : 18;
-#else
-        full_recon_search_count = (picture_control_set_ptr->slice_type == I_SLICE) ?
-            context_ptr->full_recon_search_count :
-            (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ?
-            48 : 24;
-#endif
+                (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ?
+                36 : 18;
+        else
+            full_recon_search_count = (picture_control_set_ptr->slice_type == I_SLICE) ?
+                context_ptr->full_recon_search_count :
+                (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ?
+                48 : 24;
+
         break;
     case 1:
         full_recon_search_count = 30;
@@ -5930,7 +5931,7 @@ void md_encode_block(
 #if SC_M1_NSQ_TABLE_
     is_nsq_table_used = is_nsq_table_used;
 #else
-    is_nsq_table_used = picture_control_set_ptr->enc_mode == ENC_M0 ? EB_FALSE : is_nsq_table_used;
+    is_nsq_table_used = picture_control_set_ptr->enc_mode <= ENC_M2 ? EB_FALSE : is_nsq_table_used;//omran
 #endif
 #endif
 #endif
