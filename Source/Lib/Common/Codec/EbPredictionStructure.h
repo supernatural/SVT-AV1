@@ -202,6 +202,7 @@ extern "C" {
     extern EbErrorType prediction_structure_group_ctor(
 #if MRP_M1
         uint8_t          enc_mode,
+        uint8_t         sc_content_detected,
 #endif
         PredictionStructureGroup   **predictionStructureGroupDblPtr,
         uint32_t                        base_layer_switch_mode);

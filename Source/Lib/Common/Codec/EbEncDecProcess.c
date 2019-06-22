@@ -1361,14 +1361,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if SC_M2_DECOUPLEINTRA_INTER_
-            context_ptr->decouple_intra_inter_fast_loop = 1;
-#else
-        if (picture_control_set_ptr->enc_mode <= ENC_M1)
+
+        if (picture_control_set_ptr->enc_mode < ENC_M1)//omran sc
             context_ptr->decouple_intra_inter_fast_loop = 0;
         else
             context_ptr->decouple_intra_inter_fast_loop = 1;
-#endif
     else
 #endif
     context_ptr->decouple_intra_inter_fast_loop = 0;
@@ -1505,18 +1502,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1                    On
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
-    if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if SC_M2_WARPED_
-            context_ptr->warped_motion_injection = 0;
-#else
-        if (picture_control_set_ptr->enc_mode <= ENC_M1)
-            context_ptr->warped_motion_injection = 1;
-        else
-            context_ptr->warped_motion_injection = 0;
-#endif
+    if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)//omran sc
+        context_ptr->warped_motion_injection = 0;
     else
 #endif
-    context_ptr->warped_motion_injection = 1;
+        context_ptr->warped_motion_injection = 1;
 #else
     if (picture_control_set_ptr->enc_mode <= ENC_M5)
         context_ptr->warped_motion_injection = 1;
@@ -1604,14 +1594,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1                    ON for 16x16 and above
     // 2                    ON for 32x32 and above
 #if NEW_PRESETS
-#if SC_M5_IF_BLK_SIZE_
+#if SCREEN_CONTENT_SETTINGS //omran sc
+    if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->interpolation_filter_search_blk_size = 1;
-#else
+    else
+#endif
     if (picture_control_set_ptr->enc_mode <= ENC_M4)
         context_ptr->interpolation_filter_search_blk_size = 0;
     else
         context_ptr->interpolation_filter_search_blk_size = 1;
-#endif
 #else
     if (picture_control_set_ptr->enc_mode == ENC_M0)
         context_ptr->interpolation_filter_search_blk_size = 0;

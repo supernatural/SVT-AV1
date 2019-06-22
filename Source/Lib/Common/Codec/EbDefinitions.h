@@ -39,19 +39,21 @@ extern "C" {
 #define NEW_SC                           0
 #if NEW_SC
     
-#define NEW_M0_SC                           1
-#define NEW_M1_SC                           1
-#define NEW_M2_SC                           1
-#define NEW_M3_SC                           1
-#define NEW_M4_SC                           1
-#define NEW_M5_SC                           1
-#define NEW_M6_SC                           1
-#define NEW_M7_SC                           1
+#define NEW_M0_SC                           0
+#define NEW_M1_SC                           0
+#define NEW_M2_SC                           0
+#define NEW_M3_SC                           0
+#define NEW_M4_SC                           0
+#define NEW_M5_SC                           0
+#define NEW_M6_SC                           0
+#define NEW_M7_SC                           0
 
+
+#define SC_M2_DECOUPLEINTRA_INTER_          1 //nfl
 // NEW M0 SC
 #if NEW_M0_SC
 //BASE
-#define DISABLE_IMPROVED_SUBPEL_SEARCH      1
+#define DISABLE_IMPROVED_SUBPEL_SEARCH      0 //OA
 #define SC_NEW_ME_SR                        1
 #define SC_M2_8x8_                          1 
 #define SC_M1_64SB_                         1 
@@ -67,19 +69,19 @@ extern "C" {
 // NEW M1 SC
 #if NEW_M1_SC
 #define SC_M1_MRP_                          1  
-#define SC_M2_DECOUPLEINTRA_INTER_          1
+#define SC_M2_DECOUPLEINTRA_INTER_          1 //nfl
 #endif
 
 // NEW M2 SC
 #if NEW_M2_SC
 #define SC_M1_ATB_                          1 
-#define SC_M2_NFL_                          1
-#define SC_M2_ME_HME_                       1
+#define SC_M2_NFL_                          1 //nfl
+#define SC_M2_ME_HME_                       0
 #endif    
 // NEW M3 SC
 #if NEW_M3_SC   
-#define SC_M3_ME_HME_                       1
-#define SC_M2_DEPTH_                        1
+#define SC_M3_ME_HME_                       0
+#define SC_M2_DEPTH_                        0
 #define SC_M3_DEPTH_                        1 
 #define SC_M1_NSQ_TABLE_                    1
 #endif
@@ -512,7 +514,7 @@ extern "C" {
 #define EIGTH_PEL_MV                                    0
 #define DISABLE_NSQ_TABLE_FOR_M0                        1 // On wil disable the nsq_table ordering algrithm. This is a temporarily adoption that will be disable once we comeup with a better ordreing mecanisme when MRP i ON.
 #if DISABLE_IMPROVED_SUBPEL_SEARCH
-#define IMPROVED_SUBPEL_SEARCH                          0
+#define IMPROVED_SUBPEL_SEARCH                          1
 #else
 #define IMPROVED_SUBPEL_SEARCH                          1
 #endif
@@ -4473,18 +4475,12 @@ static const uint16_t search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPP
         { 128,   64,   64,   64,   64,   64,   48,   48,   48,   48,   48,    48,   48 },
         { 128,   64,   64,   64,   64,   64,   48,   48,   48,   48,   48,    48,   48 }
 #endif
-    } , {
- #if SC_NEW_ME_SR        
-        {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {960 ,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 }
-#else
-        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {1280,  640,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 }
-#endif
+    } , {//omran  sc    
+        {960 ,  960,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+        {960 ,  960,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+        {960 ,  960,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 },
+        {960 ,  960,  640,  288,  208,  168,  128,  128,   64,   80,   80,    80,   80 }
+
     }
 };
 static const uint16_t search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
@@ -4507,18 +4503,13 @@ static const uint16_t search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUP
         { 128,   64,   64,   32,   32,   32,   48,   48,   16,   16,   16,    16,   16 },
         { 128,   64,   64,   32,   32,   32,   48,   48,   16,   16,   16,    16,   16 }
 #endif
-    } , {
- #if SC_NEW_ME_SR        
-        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
-        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
-        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
-        {960 ,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 }
-#else
-        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
-        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
-        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
-        {1280,  640,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 }
-#endif
+    } , {//omran
+ 
+        {960 ,  960,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {960 ,  960,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {960 ,  960,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 },
+        {960 ,  960,  640,  248,  168,  128,   80,   80,   48,   80,   80,    80,   80 }
+
     }
 
     //     M0    M1    M2    M3    M4    M5    M6    M7    M8    M9    M10    M11    M12
