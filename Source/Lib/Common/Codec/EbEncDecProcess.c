@@ -1390,11 +1390,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->decouple_intra_inter_fast_loop = 1;
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
-#if M3_DECOUPLE_INTRA_INTER_FAST_LOOP
-            context_ptr->decouple_intra_inter_fast_loop = 1;
-#else
+//#if M3_DECOUPLE_INTRA_INTER_FAST_LOOP
+//            context_ptr->decouple_intra_inter_fast_loop = 1;
+//#else
             context_ptr->decouple_intra_inter_fast_loop = 0;
-#endif
+//#endif
         else
             context_ptr->decouple_intra_inter_fast_loop = 1;
 #endif

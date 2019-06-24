@@ -366,16 +366,18 @@ extern "C" {
 #define M3_ATB                            1
 #define M3_MRP_MODE                       1
 #define M3_DS_ME                          1
-#define M3_DECOUPLE_INTRA_INTER_FAST_LOOP 1
+//#define M3_DECOUPLE_INTRA_INTER_FAST_LOOP 1
 #define M3_3X3_UNI_INJECT                 1
 #define M3_3X3_BI_INJECT                  1
 #define M3_ME_SEARCH_METHOD               1
 #define M3_INTERPOLATION_SEARCH_METHOD    1
 
-#define M3_IBC_MODE             1
 #define M3_TX_SEARCH            1
+#define M3_TX_WEIGHT            1
 #define M3_SB_SIZE              1
 #define M3_ME_SET               1
+#define M3_SUBPEL_MODE          1
+#define M3_INCOMPLETE_SB_FIX    1 // To understand 
 ///******************************************************************///
 ///******************************************************************///
 

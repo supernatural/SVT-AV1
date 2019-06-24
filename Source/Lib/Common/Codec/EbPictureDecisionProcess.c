@@ -1253,11 +1253,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->ibc_mode = 1;
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M2)
-#if M3_IBC_MODE
-            picture_control_set_ptr->ibc_mode = 1;
-#else
             picture_control_set_ptr->ibc_mode = 0;
-#endif
         else
             picture_control_set_ptr->ibc_mode = 1;
 #endif
@@ -1529,7 +1525,14 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
             picture_control_set_ptr->tx_weight = MAX_MODE_COST;
         else if (!MR_MODE && picture_control_set_ptr->enc_mode <= ENC_M1)
+#if M3_TX_WEIGHT
+            if (picture_control_set_ptr->is_used_as_reference_flag)
+                picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
+            else
+                picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
+#else
             picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
+#endif
         else if (!MR_MODE){
             if (picture_control_set_ptr->is_used_as_reference_flag)
                 picture_control_set_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
@@ -1607,7 +1610,15 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (picture_control_set_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
         picture_control_set_ptr->tx_search_reduced_set = 0;
     else if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#if M3_TX_SEARCH
+
+        if (picture_control_set_ptr->is_used_as_reference_flag)
+            picture_control_set_ptr->tx_search_reduced_set = 0;
+        else
+            picture_control_set_ptr->tx_search_reduced_set = 1;
+#else
         picture_control_set_ptr->tx_search_reduced_set = 0;
+#endif
     else if (picture_control_set_ptr->enc_mode <= ENC_M3)
         if (picture_control_set_ptr->is_used_as_reference_flag)
             picture_control_set_ptr->tx_search_reduced_set = 0;
@@ -1615,13 +1626,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->tx_search_reduced_set = 1;
     else
         picture_control_set_ptr->tx_search_reduced_set = 1;
-#if M3_TX_SEARCH
 
-    if (picture_control_set_ptr->is_used_as_reference_flag)
-        picture_control_set_ptr->tx_search_reduced_set = 0;
-    else
-        picture_control_set_ptr->tx_search_reduced_set = 1;
-#endif
 #endif
 
 #else
@@ -4232,10 +4237,17 @@ void* picture_decision_kernel(void *input_ptr)
                                         EX_QP_MODE;
                                 } else if (picture_control_set_ptr->enc_mode ==
                                            ENC_M0) {
+#if M3_SUBPEL_MODE
+                                    picture_control_set_ptr->half_pel_mode =
+                                        REFINMENT_HP_MODE;
+                                    picture_control_set_ptr->quarter_pel_mode =
+                                        REFINMENT_QP_MODE;
+#else
                                     picture_control_set_ptr->half_pel_mode =
                                         EX_HP_MODE;
                                     picture_control_set_ptr->quarter_pel_mode =
                                         REFINMENT_QP_MODE;
+#endif
                                 } else {
                                     picture_control_set_ptr->half_pel_mode =
                                         REFINMENT_HP_MODE;
