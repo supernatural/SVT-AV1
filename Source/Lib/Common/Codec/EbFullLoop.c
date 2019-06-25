@@ -1973,10 +1973,17 @@ void av1_quantize_inv_quantize(
     
     // Hsan: set to FALSE until adding x86 quantize_fp
 #if ENABLE_QUANT_FP
+    
 #if SC_M1_Q_FP_
-    EbBool perform_quantize_fp =  EB_FALSE;
+    EbBool perform_quantize_fp = EB_FALSE;
 #else
-    EbBool perform_quantize_fp = picture_control_set_ptr->enc_mode <= ENC_M2 ? EB_TRUE : EB_FALSE; //omran
+    EbBool perform_quantize_fp;
+#if SCREEN_CONTENT_SETTINGS
+    if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)//omran sc
+     perform_quantize_fp = picture_control_set_ptr->enc_mode <= ENC_M3 ? EB_TRUE : EB_FALSE; 
+    else
+#endif
+    perform_quantize_fp = picture_control_set_ptr->enc_mode <= ENC_M2 ? EB_TRUE : EB_FALSE; //omran
 #endif
 #else
     EbBool perform_quantize_fp = EB_FALSE;

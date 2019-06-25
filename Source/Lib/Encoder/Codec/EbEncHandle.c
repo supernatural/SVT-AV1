@@ -2264,19 +2264,40 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
 #if MEMORY_FOOTPRINT_OPT_ME_MV
     //0: MRP Mode 0 (4,3)
     //1: MRP Mode 1 (2,2)
-    sequence_control_set_ptr->mrp_mode = (uint8_t) (sequence_control_set_ptr->static_config.enc_mode <= ENC_M2|| (sequence_control_set_ptr->static_config.enc_mode >= ENC_M1 && sequence_control_set_ptr->static_config.screen_content_mode)) ? 0 : 1;//omran + sc
+#if SC_M1_MRP_MODE_
+    sequence_control_set_ptr->mrp_mode = (uint8_t)1;
+#else
+#if SCREEN_CONTENT_SETTINGS
+    if (sequence_control_set_ptr->static_config.screen_content_mode == 1)
+
+        sequence_control_set_ptr->mrp_mode = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M3) ? 0 : 1;//omran sc
+    else
+#endif
+        sequence_control_set_ptr->mrp_mode = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M2) ? 0 : 1;//omran
+#endif
+#endif
     //0: ON
     //1: OFF
 #if SC_M7_CDF_
     sequence_control_set_ptr->cdf_mode = (uint8_t)  1;
 #else
+#if SCREEN_CONTENT_SETTINGS
+    if (sequence_control_set_ptr->static_config.screen_content_mode == 1)
+        sequence_control_set_ptr->cdf_mode = (uint8_t) 0;
+    else
+#endif
     sequence_control_set_ptr->cdf_mode = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M6) ? 0 : 1;
 #endif
 
     //0: NSQ absent
     //1: NSQ present
 #if REDUCE_BLOCK_COUNT_ME
-    sequence_control_set_ptr->nsq_present = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
+#if SCREEN_CONTENT_SETTINGS
+    if (sequence_control_set_ptr->static_config.screen_content_mode == 1)
+        sequence_control_set_ptr->nsq_present = (uint8_t) 1 ;
+    else
+#endif
+        sequence_control_set_ptr->nsq_present = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
 #else
     sequence_control_set_ptr->nsq_present = 1;
 #endif
@@ -2285,13 +2306,21 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
     // 0                            0: filtering
     // 1                            1: decimation
 #if SC_M1_DOWN_SAMPLE_FILTER_
-        sequence_control_set_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
+    sequence_control_set_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
 #else
+#if SCREEN_CONTENT_SETTINGS //omran sc
+    if (sequence_control_set_ptr->static_config.screen_content_mode == 1)
+        if (sequence_control_set_ptr->static_config.enc_mode <= ENC_M3)//omran
+            sequence_control_set_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
+        else
+            sequence_control_set_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
+    else
+#endif
     if (sequence_control_set_ptr->static_config.enc_mode <= ENC_M2)//omran
         sequence_control_set_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
     else
         sequence_control_set_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
-#endif
+
 #endif
 #endif
 }

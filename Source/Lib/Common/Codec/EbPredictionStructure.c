@@ -1799,7 +1799,7 @@ EbErrorType prediction_structure_group_ctor(
         if (enc_mode > ENC_M0) {
 
             for (int gop_i = 1; gop_i < 8; ++gop_i) {
-                if ( enc_mode >= ENC_M1)//omran
+
                     for (int i = 1; i < 4; ++i) {
                         four_level_hierarchical_pred_struct[gop_i].ref_list0[i] = 0;
                         four_level_hierarchical_pred_struct[gop_i].ref_list1[i] = 0;
@@ -1807,7 +1807,7 @@ EbErrorType prediction_structure_group_ctor(
             }
 
             for (int gop_i = 1; gop_i < 16; ++gop_i) {
-                if ( enc_mode >= ENC_M1  )//omran sc
+
                     for (int i = 1; i < 4; ++i) {
                         five_level_hierarchical_pred_struct[gop_i].ref_list0[i] = 0;
                         five_level_hierarchical_pred_struct[gop_i].ref_list1[i] = 0;

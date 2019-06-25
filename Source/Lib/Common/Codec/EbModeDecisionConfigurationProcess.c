@@ -2076,14 +2076,10 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if SC_M7_UPDATE_CDF_
-            picture_control_set_ptr->update_cdf = 0;
-#else
-        if (picture_control_set_ptr->enc_mode <= ENC_M6)
+        if (picture_control_set_ptr->enc_mode <= ENC_M4)
             picture_control_set_ptr->update_cdf = 1;
         else
             picture_control_set_ptr->update_cdf = 0;
-#endif
     else
 #endif
     picture_control_set_ptr->update_cdf = (picture_control_set_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;

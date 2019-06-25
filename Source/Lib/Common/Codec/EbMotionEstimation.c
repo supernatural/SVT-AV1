@@ -13755,11 +13755,13 @@ EbErrorType motion_estimate_lcu(
         picture_control_set_ptr->nsq_search_level >= NSQ_SEARCH_LEVEL1 &&
         picture_control_set_ptr->nsq_search_level < NSQ_SEARCH_FULL) ? EB_TRUE : EB_FALSE;
 #if DISABLE_NSQ_TABLE_FOR_M0
-#if SC_M1_NSQ_TABLE_
-    is_nsq_table_used =  is_nsq_table_used;
-#else
-    is_nsq_table_used = picture_control_set_ptr->enc_mode <= ENC_M2 ? EB_FALSE : is_nsq_table_used;//omran
+#if SCREEN_CONTENT_SETTINGS //omran sc
+    if (picture_control_set_ptr->sc_content_detected)
+    is_nsq_table_used = picture_control_set_ptr->enc_mode <= ENC_M2 ? EB_FALSE : is_nsq_table_used;//omran sc
+    else
 #endif
+    is_nsq_table_used = picture_control_set_ptr->enc_mode <= ENC_M2 ? EB_FALSE : is_nsq_table_used;//omran
+
 #endif
 #endif
 #if !MRP_ME

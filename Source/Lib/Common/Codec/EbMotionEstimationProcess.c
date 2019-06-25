@@ -126,7 +126,43 @@ void* set_me_hme_params_oq(
     uint8_t sc_content_detected = picture_control_set_ptr->sc_content_detected;
 #if ALTREF_FILTERING_SUPPORT
     if (me_context_ptr->me_alt_ref == EB_TRUE)
+    {
+        if (sc_content_detected) {
+            switch (picture_control_set_ptr->enc_mode) {
+            case 0:
+                hmeMeLevel = 0;
+                break;
+            case 1:
+                hmeMeLevel = 1;
+                break;
+            case 2:
+                hmeMeLevel = 2;
+                break;
+            case 3:
+                hmeMeLevel = 3;
+                break;
+            case 4:
+                hmeMeLevel = 5;
+                break;
+            case 5:
+                hmeMeLevel = 6;
+                break;
+            case 6:
+                hmeMeLevel = 6;
+                break;
+            case 7:
+                hmeMeLevel = 8;
+                break;
+            case 8:
+                hmeMeLevel = 8;
+                break;
+            default:
+                hmeMeLevel = 0;
+                break;
+            }
+        }
         sc_content_detected = 0;
+    }
 #endif
 #if SCREEN_CONTENT_SETTINGS && !PCS_ME_FIX
     picture_control_set_ptr->enable_hme_level0_flag = enable_hme_level0_flag[sc_content_detected][input_resolution][hmeMeLevel];
@@ -257,6 +293,12 @@ EbErrorType signal_derivation_me_kernel_oq(
     // 2: off
     if (picture_control_set_ptr->use_subpel_flag == 1) {
 #if NEW_PRESETS
+#if SCREEN_CONTENT_SETTINGS
+        if (picture_control_set_ptr->sc_content_detected)
+            context_ptr->me_context_ptr->fractional_search_model = 0;
+        else
+
+#endif
         if (picture_control_set_ptr->enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->fractional_search_model = 0;
         else
@@ -277,14 +319,12 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->sc_content_detected)
-#if SC_M7_HME_SR_METHOD_
-            context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
-#else
+
         if (picture_control_set_ptr->enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
         else
             context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
-#endif
+
     else
 #endif
     context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
@@ -305,14 +345,12 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->sc_content_detected)
-#if SC_M4_ME_SR_METHOD_
-            context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
-#else
-        if (picture_control_set_ptr->enc_mode <= ENC_M3)
+
+        if (picture_control_set_ptr->enc_mode <= ENC_M4)//omran sc
             context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
         else
             context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
-#endif
+
     else
 #endif
 #if M2_ME_SR_METHOD
