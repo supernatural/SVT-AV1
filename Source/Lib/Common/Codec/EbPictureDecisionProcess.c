@@ -867,24 +867,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if SCREEN_CONTENT_SETTINGS && PCS_ME_FIX
   
     EbEncMode       enc_mode = picture_control_set_ptr->enc_mode ;
-#if SC_M8_ME_HME_
-    enc_mode = ENC_M8;
-#elif  SC_M7_ME_HME_
-    enc_mode = ENC_M7;
-#elif SC_M6_ME_HME_
-    enc_mode = ENC_M6;
-#elif SC_M5_ME_HME_
-    enc_mode = ENC_M5;
-#elif SC_M4_ME_HME_
-    enc_mode = ENC_M4;
-#elif SC_M3_ME_HME_    
-    enc_mode = ENC_M3;
-#elif SC_M2_ME_HME_
-    enc_mode = ENC_M2;
-#elif SC_M1_ME_HME_
-    enc_mode = ENC_M1;
 
-#endif
     picture_control_set_ptr->enable_hme_level0_flag = enable_hme_level0_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][enc_mode];
     picture_control_set_ptr->enable_hme_level1_flag = enable_hme_level1_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][enc_mode];
     picture_control_set_ptr->enable_hme_level2_flag = enable_hme_level2_flag[picture_control_set_ptr->sc_content_detected][sequence_control_set_ptr->input_resolution][enc_mode];
@@ -893,13 +876,6 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
         if (sc_content_detected)
-#if SC_M4_DEPTH_
-            if (picture_control_set_ptr->slice_type == I_SLICE)
-                picture_control_set_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
-            else
-                picture_control_set_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
-        else
-#else
             if (picture_control_set_ptr->enc_mode <= ENC_M2)//omran sc
                 picture_control_set_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
             else if (picture_control_set_ptr->enc_mode <= ENC_M3)
@@ -919,7 +895,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 
         else
 
-#endif
+
 #endif
 #if M4_DEPTH
             picture_control_set_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
@@ -1020,9 +996,6 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_FULL;
 #if SCREEN_CONTENT_SETTINGS
         else if (sc_content_detected)
-#if SC_M4_DEPTH_ || SC_M5_DEPTH_
-            picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
-#else
             if (picture_control_set_ptr->enc_mode <= ENC_M2)//omran sc
                 picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
             else if (picture_control_set_ptr->enc_mode <= ENC_M3)
@@ -1035,7 +1008,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                     picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_OFF;
 
-#endif
+
 #endif
         else if (picture_control_set_ptr->enc_mode <= ENC_M2)//omran
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
@@ -1207,14 +1180,12 @@ EbErrorType signal_derivation_multi_processes_oq(
             }
 
         //IBC Modes:   0:Slow   1:Fast   2:Faster
-#if SC_M3_IBC_MODE_
-            picture_control_set_ptr->ibc_mode = 1;
-#else
+
         if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran
             picture_control_set_ptr->ibc_mode = 0;
         else
             picture_control_set_ptr->ibc_mode = 1;
-#endif
+
     }
     else {
         picture_control_set_ptr->allow_screen_content_tools = 0;
@@ -1225,10 +1196,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (sc_content_detected)
-#if SC_M2_LOOP_FILTER_
-        picture_control_set_ptr->loop_filter_mode = 0;
-    else
-#else
+
 #if LOOP_FILTER_FIX
         if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
             picture_control_set_ptr->loop_filter_mode = 3;
@@ -1245,7 +1213,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     else
 
-#endif
+
 #endif
 #if M1_LOOP_FILTER
         picture_control_set_ptr->loop_filter_mode = picture_control_set_ptr->is_used_as_reference_flag ? 3 : 0;
@@ -1292,14 +1260,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
         if (sc_content_detected)
-#if SC_M2_CDEF_
-            picture_control_set_ptr->cdef_filter_mode = 0;
-#else
             if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
                 picture_control_set_ptr->cdef_filter_mode = 4;
             else
                 picture_control_set_ptr->cdef_filter_mode = 0;
-#endif
+
         else
 
 #endif
@@ -1342,14 +1307,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     Av1Common* cm = picture_control_set_ptr->av1_cm;
 #if NEW_PRESETS
     if (sc_content_detected)
-#if SC_M2_SG_
-        cm->sg_filter_mode = 0;
-#else
         if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
             cm->sg_filter_mode = 4;
         else
             cm->sg_filter_mode = 0;
-#endif
+
     else
     if (picture_control_set_ptr->enc_mode <= ENC_M4)
         cm->sg_filter_mode = 4;
@@ -1377,14 +1339,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 #if SCREEN_CONTENT_SETTINGS
     if (sc_content_detected)
-#if SC_M2_WN_
-        cm->wn_filter_mode = 0;
-#else
-        if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
+
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
             cm->wn_filter_mode = 3;
         else
             cm->wn_filter_mode = 0;
-#endif
+
     else
 
 #endif
@@ -1620,13 +1580,6 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
         if (sc_content_detected)
-#if SC_M3_INTRA_PRED_
-                if (picture_control_set_ptr->temporal_layer_index == 0)
-                    picture_control_set_ptr->intra_pred_mode = 2;
-                else
-                    picture_control_set_ptr->intra_pred_mode = 3;
-        else
-#else
             if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 picture_control_set_ptr->intra_pred_mode = 0;
             else if (picture_control_set_ptr->enc_mode <= ENC_M4)//omran sc
@@ -1638,7 +1591,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 
                     picture_control_set_ptr->intra_pred_mode = 4;
         else
-#endif
+
 #endif
             if (picture_control_set_ptr->enc_mode == ENC_M0)//omran
                 picture_control_set_ptr->intra_pred_mode = 0;

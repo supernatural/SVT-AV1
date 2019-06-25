@@ -1366,14 +1366,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if SC_M2_FASTLOOP_METHOD_
-        context_ptr->decoupled_fast_loop_search_method = FULL_SAD_SEARCH;
-#else
         if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
             context_ptr->decoupled_fast_loop_search_method = SSD_SEARCH;
         else
             context_ptr->decoupled_fast_loop_search_method = FULL_SAD_SEARCH;
-#endif
     else
 
 #endif
@@ -1397,14 +1393,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if NEW_PRESETS
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if SC_M2_FL_ESCAPE_
-        context_ptr->full_loop_escape = 2;
-#else
         if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
             context_ptr->full_loop_escape = 0;
         else
             context_ptr->full_loop_escape = 2;
-#endif
     else
 
 #endif
@@ -1433,16 +1425,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1                    On
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if SC_M2_GOLBAL_MV_
-        context_ptr->global_mv_injection = 0;
-#else
-        if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
+
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
             context_ptr->global_mv_injection = 1;
         else
             context_ptr->global_mv_injection = 0;
-#endif
     else
-
 #endif
     if (picture_control_set_ptr->enc_mode <= ENC_M7)
         context_ptr->global_mv_injection = 1;
@@ -1450,9 +1438,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->global_mv_injection = 0;
 
 #if NEW_NEAREST_NEW_INJECTION
-#if SC_M1_NEARST_NEAR_
-    context_ptr->new_nearest_near_comb_injection = 0;
-#else
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)//omran sc
         if (picture_control_set_ptr->enc_mode <= ENC_M3)
@@ -1466,12 +1451,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->new_nearest_near_comb_injection = 0;
 
-#endif
+
 #endif
 #if ENHANCED_Nx4_4xN_NEW_MV
-#if SC_M1_4N_N4_
-    context_ptr->nx4_4xn_parent_mv_injection = 0;
-#else
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)//omran sc
         if (picture_control_set_ptr->enc_mode <= ENC_M3)
@@ -1485,7 +1467,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->nx4_4xn_parent_mv_injection = 0;
 
-#endif
+
 #endif
 #if M9_NEAR_INJECTION
     // Set NEAR injection
@@ -1532,14 +1514,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SCREEN_CONTENT_SETTINGS
 
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)//omran sc
-#if SC_M2_3X3_UNI_
-        context_ptr->unipred3x3_injection = 0;
-#else
             if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 context_ptr->unipred3x3_injection = 1;
             else
                 context_ptr->unipred3x3_injection = 0;
-#endif
+
     else
 
 #endif
@@ -1570,16 +1549,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
 #if SCREEN_CONTENT_SETTINGS
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)//omran sc
-#if SC_M2_3X3_BI_
-            context_ptr->bipred3x3_injection = 0;
-#else
             if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 context_ptr->bipred3x3_injection = 1;
             else
                 context_ptr->bipred3x3_injection = 0;
-#endif
         else
-
 #endif
     if (picture_control_set_ptr->enc_mode <= ENC_M2)//omran
         context_ptr->bipred3x3_injection = 1;
@@ -1673,34 +1647,28 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
     // Derive Trellis Quant Coeff Optimization Flag
-#if SC_M1_TRELLIS_
-        context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
-#else
 #if SCREEN_CONTENT_SETTINGS
-    if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)//omran sc
+    if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
             if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
             else
                 context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
     else
 #endif
-    if (picture_control_set_ptr->enc_mode <= ENC_M2) //omran
+    if (picture_control_set_ptr->enc_mode <= ENC_M2) 
         context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
     else
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
-#endif
+
 #if NEW_PRESETS
     // Derive redundant block
 #if SCREEN_CONTENT_SETTINGS
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-#if SC_M2_REDUD_BLOCK_
-        context_ptr->redundant_blk = EB_FALSE;
-#else
         if (picture_control_set_ptr->enc_mode <= ENC_M3)//omran sc
             context_ptr->redundant_blk = EB_TRUE;
         else
             context_ptr->redundant_blk = EB_FALSE;
-#endif
+
     else
 
 #endif
