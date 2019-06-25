@@ -4686,10 +4686,10 @@ unsigned int av1_get_sby_perpixel_variance(const aom_variance_fn_ptr_t *fn_ptr, 
 // blocks that have no more than 4 (experimentally selected) luma colors.
 static void is_screen_content(
     PictureParentControlSet     *picture_control_set_ptr,
-    const uint8_t               *src, 
+    const uint8_t               *src,
     int                          use_hbd,
-    int                          stride, 
-    int                         width, 
+    int                          stride,
+    int                         width,
     int                         height) {
     assert(src != NULL);
     const int blk_w = 16;
@@ -4727,8 +4727,8 @@ static void is_screen_content(
         }
     }
 
-    picture_control_set_ptr->sc_content_detected = 
-        (counts_1 * blk_h * blk_w * 10 > width * height) && 
+    picture_control_set_ptr->sc_content_detected =
+        (counts_1 * blk_h * blk_w * 10 > width * height) &&
         ( counts_2 * blk_h * blk_w * 15 > width * height) ;
 }
 
