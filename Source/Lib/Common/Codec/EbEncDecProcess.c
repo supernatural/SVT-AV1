@@ -1238,11 +1238,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nfl_level = 0;
     else
 #endif
-    //if (picture_control_set_ptr->enc_mode <= ENC_M1)
-    //    if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
-    //        context_ptr->nfl_level = (sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER) ? 0 : 1;
-    //    else
-    //        context_ptr->nfl_level = 2;
     if(picture_control_set_ptr->enc_mode <= ENC_M3)
         if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
             context_ptr->nfl_level = 2;
@@ -1350,7 +1345,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (picture_control_set_ptr->enc_mode < ENC_M1)//omran sc
             context_ptr->decouple_intra_inter_fast_loop = 0;
         else
-            context_ptr->decouple_intra_inter_fast_loop = 1;
+            context_ptr->decouple_intra_inter_fast_loop = 0;
     else
 #endif
     context_ptr->decouple_intra_inter_fast_loop = 0;
