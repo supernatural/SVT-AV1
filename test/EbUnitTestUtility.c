@@ -1,7 +1,13 @@
 /*
  * Copyright(c) 2019 Intel Corporation
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 // EbUnitTestUtility.c
 //  -Unit test utility
@@ -13,14 +19,11 @@
 /***************************************
  * Includes
  ***************************************/
+#include <time.h>
 #ifdef _WIN32
-#include <time.h>
 #include <windows.h>
-#elif defined(__linux__) || defined(__APPLE__)
-#include <sys/time.h>
-#include <time.h>
 #else
-#error OS/Platform not supported.
+#include <sys/time.h>
 #endif
 
 #include <assert.h>
@@ -438,10 +441,10 @@ void eb_unit_test_log_ptrdiff(const char *const nameBuf,
     printf("%16s = ", nameBuf);
 
     if (sizeBuf == 1)
-        printf("%" PRIu64 "\n", buf[0]);
+        printf("%td\n", buf[0]);
     else {
         for (uint32_t i = 0; i < sizeBuf; i++) {
-            printf("%10" PRIu64 ",", buf[i]);
+            printf("%10td,", buf[i]);
             if (!((i + 1) % 32))
                 printf("\n  ");
         }

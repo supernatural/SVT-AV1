@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file InvTxfm1dTest.cc
@@ -37,7 +43,6 @@
 #include "TxfmCommon.h"
 
 using svt_av1_test_tool::SVTRandom;
-using svt_av1_test_tool::round_shift;
 namespace {
 
 using InvTxfm1dParam = std::tuple<TxfmType, int>;
@@ -66,8 +71,24 @@ using InvTxfm1dParam = std::tuple<TxfmType, int>;
 class AV1InvTxfm1dTest : public ::testing::TestWithParam<InvTxfm1dParam> {
   public:
     AV1InvTxfm1dTest()
-        : txfm_type_(TEST_GET_PARAM(0)), max_error_(TEST_GET_PARAM(1)) {
+        : max_error_(TEST_GET_PARAM(1)), txfm_type_(TEST_GET_PARAM(0)) {
         txfm_size_ = get_txfm1d_size(txfm_type_);
+    }
+
+    void SetUp() override {
+        input_ = reinterpret_cast<int32_t *>(
+            eb_aom_memalign(32, MAX_TX_SIZE * sizeof(int32_t)));
+        output_ = reinterpret_cast<int32_t *>(
+            eb_aom_memalign(32, MAX_TX_SIZE * sizeof(int32_t)));
+        inv_output_ = reinterpret_cast<int32_t *>(
+            eb_aom_memalign(32, MAX_TX_SIZE * sizeof(int32_t)));
+    }
+
+    void TearDown() override {
+        eb_aom_free(input_);
+        eb_aom_free(output_);
+        eb_aom_free(inv_output_);
+        aom_clear_system_state();
     }
 
     void run_inv_accuracy_check() {
@@ -93,7 +114,7 @@ class AV1InvTxfm1dTest : public ::testing::TestWithParam<InvTxfm1dParam> {
             for (int ni = 0; ni < txfm_size_; ++ni) {
                 EXPECT_LE(
                     abs(input_[ni] -
-                        round_shift(inv_output_[ni], get_msb(txfm_size_) - 1)),
+                    svt_av1_test_tool::round_shift(inv_output_[ni], get_msb(txfm_size_) - 1)),
                     max_error_)
                     << "inv txfm type " << txfm_type_ << " size " << txfm_size_
                     << " loop: " << ti;
@@ -105,9 +126,9 @@ class AV1InvTxfm1dTest : public ::testing::TestWithParam<InvTxfm1dParam> {
     const int max_error_;      /**< max error allowed */
     int txfm_size_;            /**< transform size, max transform is DCT64 */
     const TxfmType txfm_type_; /**< tx type, including dct, iadst, idtx */
-    DECLARE_ALIGNED(32, int32_t, input_[MAX_TX_SIZE]);
-    DECLARE_ALIGNED(32, int32_t, output_[MAX_TX_SIZE]);
-    DECLARE_ALIGNED(32, int32_t, inv_output_[MAX_TX_SIZE]);
+    int32_t *input_;
+    int32_t *output_;
+    int32_t *inv_output_;
 };
 
 TEST_P(AV1InvTxfm1dTest, run_inv_accuracy_check) {

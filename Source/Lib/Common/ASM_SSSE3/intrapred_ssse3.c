@@ -4,17 +4,17 @@
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 
 #include "EbDefinitions.h"
-#include "aom_dsp_rtcd.h"
+#include "common_dsp_rtcd.h"
 #include <tmmintrin.h>
 
- // Weights are quadratic from '1' to '1 / BlockSize', scaled by
- // 2^sm_weight_log2_scale.
+// Weights are quadratic from '1' to '1 / BlockSize', scaled by
+// 2^sm_weight_log2_scale.
 static const int32_t sm_weight_log2_scale = 8;
 
 // max(block_size_wide[BLOCK_LARGEST], block_size_high[BLOCK_LARGEST])
@@ -130,7 +130,7 @@ static INLINE void smooth_pred_4xh(const __m128i *pixel, const __m128i *wh,
     }
 }
 
-void aom_smooth_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above, const uint8_t *left) {
     __m128i pixels[3];
     load_pixel_w4(above, left, 4, pixels);
@@ -141,7 +141,7 @@ void aom_smooth_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_pred_4xh(pixels, wh, ww, 4, dst, stride, 0);
 }
 
-void aom_smooth_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above, const uint8_t *left) {
     __m128i pixels[3];
     load_pixel_w4(above, left, 8, pixels);
@@ -152,7 +152,7 @@ void aom_smooth_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_pred_4xh(pixels, wh, ww, 8, dst, stride, 0);
 }
 
-void aom_smooth_predictor_4x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_4x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[3];
@@ -190,12 +190,12 @@ static INLINE void load_pixel_w8(const uint8_t *above, const uint8_t *left,
     else if (height == 8)
         pixels[2] = _mm_loadl_epi64((const __m128i *)left);
     else if (height == 16)
-        pixels[2] = _mm_load_si128((const __m128i *)left);
+        pixels[2] = _mm_loadu_si128((const __m128i *)left);
     else {
-        pixels[2] = _mm_load_si128((const __m128i *)left);
+        pixels[2] = _mm_loadu_si128((const __m128i *)left);
         pixels[4] = pixels[0];
         pixels[5] = pixels[1];
-        pixels[6] = _mm_load_si128((const __m128i *)(left + 16));
+        pixels[6] = _mm_loadu_si128((const __m128i *)(left + 16));
         pixels[7] = pixels[3];
     }
 }
@@ -296,7 +296,7 @@ static INLINE void smooth_pred_8xh(const __m128i *pixels, const __m128i *wh,
     }
 }
 
-void aom_smooth_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above, const uint8_t *left) {
     __m128i pixels[4];
     load_pixel_w8(above, left, 4, pixels);
@@ -307,7 +307,7 @@ void aom_smooth_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_pred_8xh(pixels, wh, ww, 4, dst, stride, 0);
 }
 
-void aom_smooth_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above, const uint8_t *left) {
     __m128i pixels[4];
     load_pixel_w8(above, left, 8, pixels);
@@ -318,7 +318,7 @@ void aom_smooth_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_pred_8xh(pixels, wh, ww, 8, dst, stride, 0);
 }
 
-void aom_smooth_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[4];
@@ -332,7 +332,7 @@ void aom_smooth_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_pred_8xh(pixels, &wh[2], ww, 8, dst, stride, 1);
 }
 
-void aom_smooth_predictor_8x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_8x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[8];
@@ -410,73 +410,73 @@ static INLINE void smooth_predictor_wxh(uint8_t *dst, ptrdiff_t stride,
     }
 }
 
-void aom_smooth_predictor_16x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_16x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 16, 4);
 }
 
-void aom_smooth_predictor_16x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_16x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 16, 8);
 }
 
-void aom_smooth_predictor_16x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_16x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 16, 16);
 }
 
-void aom_smooth_predictor_16x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_16x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 16, 32);
 }
 
-void aom_smooth_predictor_32x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_32x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 32, 8);
 }
 
-void aom_smooth_predictor_32x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_32x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 32, 16);
 }
 
-void aom_smooth_predictor_32x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_32x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 32, 32);
 }
 
-void aom_smooth_predictor_32x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_32x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 32, 64);
 }
 
-void aom_smooth_predictor_64x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_64x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 64, 64);
 }
 
-void aom_smooth_predictor_64x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_64x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 64, 32);
 }
 
-void aom_smooth_predictor_64x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_64x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 64, 16);
 }
 
-void aom_smooth_predictor_16x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_predictor_16x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_predictor_wxh(dst, stride, above, left, 16, 64);
@@ -544,7 +544,7 @@ static INLINE void smooth_v_pred_4xh(const __m128i *pixel,
     }
 }
 
-void aom_smooth_v_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels;
@@ -556,7 +556,7 @@ void aom_smooth_v_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_v_pred_4xh(&pixels, weights, 4, dst, stride);
 }
 
-void aom_smooth_v_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels;
@@ -568,7 +568,7 @@ void aom_smooth_v_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_v_pred_4xh(&pixels, weights, 8, dst, stride);
 }
 
-void aom_smooth_v_predictor_4x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_4x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels;
@@ -666,7 +666,7 @@ static INLINE void smooth_v_pred_8xh(const __m128i *pixels, const __m128i *wh,
     }
 }
 
-void aom_smooth_v_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -678,7 +678,7 @@ void aom_smooth_v_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_v_pred_8xh(pixels, wh, 4, dst, stride);
 }
 
-void aom_smooth_v_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -690,7 +690,7 @@ void aom_smooth_v_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_v_pred_8xh(pixels, wh, 8, dst, stride);
 }
 
-void aom_smooth_v_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -704,7 +704,7 @@ void aom_smooth_v_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_v_pred_8xh(pixels, &wh[2], 8, dst, stride);
 }
 
-void aom_smooth_v_predictor_8x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_8x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -767,73 +767,73 @@ static INLINE void smooth_v_predictor_wxh(uint8_t *dst, ptrdiff_t stride,
     }
 }
 
-void aom_smooth_v_predictor_16x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_16x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 16, 4);
 }
 
-void aom_smooth_v_predictor_16x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_16x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 16, 8);
 }
 
-void aom_smooth_v_predictor_16x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_16x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 16, 16);
 }
 
-void aom_smooth_v_predictor_16x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_16x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 16, 32);
 }
 
-void aom_smooth_v_predictor_32x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_32x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 32, 8);
 }
 
-void aom_smooth_v_predictor_32x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_32x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 32, 16);
 }
 
-void aom_smooth_v_predictor_32x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_32x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 32, 32);
 }
 
-void aom_smooth_v_predictor_32x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_32x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 32, 64);
 }
 
-void aom_smooth_v_predictor_64x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_64x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 64, 64);
 }
 
-void aom_smooth_v_predictor_64x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_64x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 64, 32);
 }
 
-void aom_smooth_v_predictor_64x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_64x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 64, 16);
 }
 
-void aom_smooth_v_predictor_16x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_v_predictor_16x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_v_predictor_wxh(dst, stride, above, left, 16, 64);
@@ -892,7 +892,7 @@ static INLINE void smooth_h_pred_4xh(const __m128i *pixel,
     }
 }
 
-void aom_smooth_h_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -904,7 +904,7 @@ void aom_smooth_h_predictor_4x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_h_pred_4xh(pixels, &weights, 4, dst, stride);
 }
 
-void aom_smooth_h_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -916,7 +916,7 @@ void aom_smooth_h_predictor_4x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_h_pred_4xh(pixels, &weights, 8, dst, stride);
 }
 
-void aom_smooth_h_predictor_4x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_4x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -945,10 +945,10 @@ static INLINE void load_pixel_h_w8(const uint8_t *above, const uint8_t *left,
     else if (height == 8)
         pixels[0] = _mm_loadl_epi64((const __m128i *)left);
     else if (height == 16)
-        pixels[0] = _mm_load_si128((const __m128i *)left);
+        pixels[0] = _mm_loadu_si128((const __m128i *)left);
     else {
-        pixels[0] = _mm_load_si128((const __m128i *)left);
-        pixels[2] = _mm_load_si128((const __m128i *)(left + 16));
+        pixels[0] = _mm_loadu_si128((const __m128i *)left);
+        pixels[2] = _mm_loadu_si128((const __m128i *)(left + 16));
         pixels[3] = pixels[1];
     }
 }
@@ -996,7 +996,7 @@ static INLINE void smooth_h_pred_8xh(const __m128i *pixels, const __m128i *ww,
     }
 }
 
-void aom_smooth_h_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -1008,7 +1008,7 @@ void aom_smooth_h_predictor_8x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_h_pred_8xh(pixels, ww, 4, dst, stride, 0);
 }
 
-void aom_smooth_h_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -1020,7 +1020,7 @@ void aom_smooth_h_predictor_8x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_h_pred_8xh(pixels, ww, 8, dst, stride, 0);
 }
 
-void aom_smooth_h_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[2];
@@ -1034,7 +1034,7 @@ void aom_smooth_h_predictor_8x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     smooth_h_pred_8xh(pixels, ww, 8, dst, stride, 1);
 }
 
-void aom_smooth_h_predictor_8x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_8x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     __m128i pixels[4];
@@ -1093,177 +1093,74 @@ static INLINE void smooth_h_predictor_wxh(uint8_t *dst, ptrdiff_t stride,
     }
 }
 
-void aom_smooth_h_predictor_16x4_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_16x4_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 16, 4);
 }
 
-void aom_smooth_h_predictor_16x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_16x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 16, 8);
 }
 
-void aom_smooth_h_predictor_16x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_16x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 16, 16);
 }
 
-void aom_smooth_h_predictor_16x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_16x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 16, 32);
 }
 
-void aom_smooth_h_predictor_16x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_16x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 16, 64);
 }
 
-void aom_smooth_h_predictor_32x8_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_32x8_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 32, 8);
 }
 
-void aom_smooth_h_predictor_32x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_32x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 32, 16);
 }
 
-void aom_smooth_h_predictor_32x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_32x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 32, 32);
 }
 
-void aom_smooth_h_predictor_32x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_32x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 32, 64);
 }
 
-void aom_smooth_h_predictor_64x64_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_64x64_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 64, 64);
 }
 
-void aom_smooth_h_predictor_64x32_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_64x32_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 64, 32);
 }
 
-void aom_smooth_h_predictor_64x16_ssse3(uint8_t *dst, ptrdiff_t stride,
+void eb_aom_smooth_h_predictor_64x16_ssse3(uint8_t *dst, ptrdiff_t stride,
     const uint8_t *above,
     const uint8_t *left) {
     smooth_h_predictor_wxh(dst, stride, above, left, 64, 16);
-}
-
-void eb_smooth_v_predictor_all_ssse3(uint8_t *dst, ptrdiff_t stride, int32_t bw,
-    int32_t bh, const uint8_t *above,
-    const uint8_t *left) {
-    (void)bh;
-
-    switch (bw) {
-    case 4:
-        aom_smooth_v_predictor_4x4_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 8:
-        aom_smooth_v_predictor_8x8_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 16:
-        aom_smooth_v_predictor_16x16_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 32:
-        aom_smooth_v_predictor_32x32_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 64:
-        aom_smooth_v_predictor_64x64_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    default:
-
-        break;
-    }
-}
-void eb_smooth_h_predictor_all_ssse3(uint8_t *dst, ptrdiff_t stride, int32_t bw,
-    int32_t bh, const uint8_t *above,
-    const uint8_t *left) {
-    (void)bh;
-    //printf("here");
-    switch (bw) {
-    case 4:
-        aom_smooth_h_predictor_4x4_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 8:
-        aom_smooth_h_predictor_8x8_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 16:
-        aom_smooth_h_predictor_16x16_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 32:
-        aom_smooth_h_predictor_32x32_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    case 64:
-        aom_smooth_h_predictor_64x64_ssse3(
-            dst,
-            stride,
-            above,
-            left
-        );
-        break;
-    default:
-
-        break;
-    }
 }

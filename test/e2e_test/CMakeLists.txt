@@ -1,33 +1,23 @@
 #
 # Copyright(c) 2019 Netflix, Inc
-# SPDX - License - Identifier: BSD - 2 - Clause - Patent
+#
+# This source code is subject to the terms of the BSD 2 Clause License and
+# the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+# was not distributed with this source code in the LICENSE file, you can
+# obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+# Media Patent License 1.0 was not distributed with this source code in the
+# PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 #
 
 # APP Directory CMakeLists.txt
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
 
 include(ProcessorCount)
 set(SVT_AV1_E2E_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 include("${SVT_AV1_E2E_ROOT}/test_data_util.cmake")
 include("${SVT_AV1_E2E_ROOT}/libaom_dependency.cmake")
 
-# Include Subdirectories
-include_directories(${PROJECT_SOURCE_DIR}/test/
-    ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/
-    ${PROJECT_SOURCE_DIR}/third_party/googletest/include
-    ${PROJECT_SOURCE_DIR}/third_party/googletest/src
-    ${PROJECT_SOURCE_DIR}/third_party/aom/inc
-    ${PROJECT_SOURCE_DIR}/Source/API)
-
 # Link Subdirectories
-if(APPLE)
-    link_directories(${PROJECT_SOURCE_DIR}/third_party/aom/lib/mac)
-elseif(UNIX)
-    link_directories(${PROJECT_SOURCE_DIR}/third_party/aom/lib/linux)
-else()
-    link_directories(${PROJECT_SOURCE_DIR}/third_party/aom/lib/msvc)
-endif()
+link_directories(${PROJECT_SOURCE_DIR}/third_party/aom/lib)
 
 file(GLOB all_files
     "*.h"
@@ -37,23 +27,23 @@ file(GLOB all_files
 
 set(lib_list
     SvtAv1Enc
+    SvtAv1Dec
     gtest_all
     #SDL2.lib
-    aom)
+    aom
+    $<TARGET_OBJECTS:safestringlib>)
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
+endif()
 
 if(UNIX)
   # App Source Files
     add_executable(SvtAv1E2ETests
         ${all_files})
 
-    if(APPLE)
-        add_custom_command(TARGET SvtAv1E2ETests POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/third_party/aom/lib/mac/* ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
-    else()
-        add_custom_command(TARGET SvtAv1E2ETests POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/third_party/aom/lib/linux/* ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
-    endif()
-
+    add_custom_command(TARGET SvtAv1E2ETests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/third_party/aom/lib/* ${CMAKE_OUTPUT_DIRECTORY}/)
     # Link the Encoder App
      target_link_libraries(SvtAv1E2ETests
         ${lib_list}
@@ -69,9 +59,19 @@ else()
         COMPILE_DEFINITIONS "GTEST_LINKED_AS_SHARED_LIBRARY=1")
 endif()
 
+target_include_directories(SvtAv1E2ETests PRIVATE
+    ${CMAKE_OUTPUT_DIRECTORY}
+    ${PROJECT_SOURCE_DIR}/Source/API
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Decoder/Codec
+    ${PROJECT_SOURCE_DIR}/test
+    ${PROJECT_SOURCE_DIR}/third_party/aom/inc
+    ${PROJECT_SOURCE_DIR}/third_party/googletest/include
+    ${PROJECT_SOURCE_DIR}/third_party/googletest/src
+    ${PROJECT_SOURCE_DIR}/third_party/safestringlib)
+
 install(TARGETS SvtAv1E2ETests RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-add_test(SvtAv1E2ETests ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/SvtAv1E2ETests)
+add_test(SvtAv1E2ETests ${CMAKE_OUTPUT_DIRECTORY}/SvtAv1E2ETests)
 add_dependencies(SvtAv1E2ETests DepLibAom)
 
 # testdata download targets.

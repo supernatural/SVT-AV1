@@ -1,7 +1,14 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
+
 /******************************************************************************
  * @file RefDecoder.cc
  *
@@ -19,6 +26,12 @@
 #include "gtest/gtest.h"
 #include "RefDecoder.h"
 #include "ParseUtil.h"
+#ifdef _MSC_VER
+// The given function is local and not referenced in the body of the module;
+// therefore, the function is dead code.
+// Disable it since the aom_codec_control_xxx is not used.
+#pragma warning(disable : 4505)
+#endif
 
 /** from aom/common/blockd.h */
 typedef enum {
@@ -125,15 +138,6 @@ static bool is_ext_block(const uint32_t sb_type) {
     return true;
 }
 
-/** partition depth equres to log2(minimum block size)*/
-static std::string get_partition_depth(const uint32_t block_size) {
-    if (block_size != 0) {
-        uint32_t patition_depth = std::log2(128 / block_size);
-        return std::to_string(patition_depth);
-    }
-    return "";
-}
-
 /** from aom/common/enums.h */
 // Note: All directional predictors must be between V_PRED and D67_PRED (both
 // inclusive).
@@ -176,10 +180,10 @@ typedef enum ATTRIBUTE_PACKED {
     COMP_INTER_MODE_NUM = COMP_INTER_MODE_END - COMP_INTER_MODE_START,
     INTRA_MODES = PAETH_PRED + 1,  // PAETH_PRED has to be the last intra mode.
     INTRA_INVALID = MB_MODE_COUNT  // For uv_mode in inter blocks
-} PREDICTION_MODE;
+} PredictionMode;
 
 // TODO(ltrudeau) Do we really want to pack this?
-// TODO(ltrudeau) Do we match with PREDICTION_MODE?
+// TODO(ltrudeau) Do we match with PredictionMode?
 typedef enum ATTRIBUTE_PACKED {
     UV_DC_PRED,        // Average of above and left pixels
     UV_V_PRED,         // Vertical
@@ -197,44 +201,14 @@ typedef enum ATTRIBUTE_PACKED {
     UV_CFL_PRED,       // Chroma-from-Luma
     UV_INTRA_MODES,
     UV_MODE_INVALID,  // For uv_mode in inter blocks
-} UV_PREDICTION_MODE;
+} UvPredictionMode;
 
 typedef enum ATTRIBUTE_PACKED {
     SIMPLE_TRANSLATION,
     OBMC_CAUSAL,    // 2-sided OBMC
     WARPED_CAUSAL,  // 2-sided WARPED
     MOTION_MODES
-} MOTION_MODE;
-
-/** copied from EbRateControlProcess.c */
-static const uint8_t quantizer_to_qindex[] = {
-    0,   4,   8,   12,  16,  20,  24,  28,  32,  36,  40,  44,  48,
-    52,  56,  60,  64,  68,  72,  76,  80,  84,  88,  92,  96,  100,
-    104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 148, 152,
-    156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200, 204,
-    208, 212, 216, 220, 224, 228, 232, 236, 240, 244, 249, 255,
-};
-
-/** get qp value with the given qindex */
-static uint32_t get_qp(const uint8_t qindex) {
-    if (qindex > 255) {
-        printf("qindex is larger than 255!\n");
-        return 63;
-    }
-
-    uint32_t qp = 0;
-    for (const uint8_t index : quantizer_to_qindex) {
-        if (index == qindex)
-            return qp;
-        else if (index > qindex) {
-            if ((index - qindex) > (qindex - quantizer_to_qindex[qp - 1]))
-                return qp - 1;
-            break;
-        }
-        qp++;
-    }
-    return qp;
-}
+} MotionMode;
 
 using namespace svt_av1_e2e_tools;
 
@@ -281,10 +255,10 @@ void RefDecoder::parse_frame_info() {
     ASSERT_NE(inspect_data, nullptr) << "inspection frame data is not ready";
 
     // get frame info
-    const int tile_cols = inspect_data->tile_mi_cols;
-    const int tile_rows = inspect_data->tile_mi_rows;
-    uint32_t min_qindex = 255;
-    uint32_t max_qindex = 0;
+    stream_info_.tile_cols = inspect_data->tile_mi_cols;
+    stream_info_.tile_rows = inspect_data->tile_mi_rows;
+    int16_t min_qindex = 255;
+    int16_t max_qindex = 0;
     uint32_t min_block_size = 128;
     size_t mi_count = inspect_data->mi_cols * inspect_data->mi_rows;
     for (size_t i = 0; i < mi_count; i++) {
@@ -307,8 +281,10 @@ void RefDecoder::parse_frame_info() {
     // update overall stream info
     stream_info_.min_block_size =
         std::min(min_block_size, stream_info_.min_block_size);
-    stream_info_.min_qindex = std::min(min_qindex, stream_info_.min_qindex);
-    stream_info_.max_qindex = std::max(max_qindex, stream_info_.max_qindex);
+    if (min_qindex < stream_info_.min_qindex)
+        stream_info_.min_qindex = min_qindex;
+    if (max_qindex > stream_info_.max_qindex)
+        stream_info_.max_qindex = max_qindex;
     stream_info_.max_intra_period =
         get_max_intra_period_length(stream_info_.frame_type_list);
 }
@@ -316,15 +292,15 @@ void RefDecoder::parse_frame_info() {
 static VideoColorFormat trans_video_format(aom_img_fmt_t fmt) {
     switch (fmt) {
     case AOM_IMG_FMT_YV12: return IMG_FMT_YV12;
-    case AOM_IMG_FMT_I420: return IMG_FMT_NV12;
+    case AOM_IMG_FMT_I420: return IMG_FMT_I420;
     case AOM_IMG_FMT_AOMYV12: return IMG_FMT_YV12_CUSTOM_COLOR_SPACE;
-    case AOM_IMG_FMT_AOMI420: return IMG_FMT_NV12_CUSTOM_COLOR_SPACE;
+    case AOM_IMG_FMT_AOMI420: return IMG_FMT_I420_CUSTOM_COLOR_SPACE;
     case AOM_IMG_FMT_I422: return IMG_FMT_422;
     case AOM_IMG_FMT_I444: return IMG_FMT_444;
     case AOM_IMG_FMT_444A: return IMG_FMT_444A;
-    case AOM_IMG_FMT_I42016: return IMG_FMT_420P10_PACKED;
-    case AOM_IMG_FMT_I42216: return IMG_FMT_422P10_PACKED;
-    case AOM_IMG_FMT_I44416: return IMG_FMT_444P10_PACKED;
+    case AOM_IMG_FMT_I42016: return IMG_FMT_420;
+    case AOM_IMG_FMT_I42216: return IMG_FMT_422;
+    case AOM_IMG_FMT_I44416: return IMG_FMT_444;
     default: break;
     }
     return IMG_FMT_422;
@@ -338,7 +314,7 @@ RefDecoder::RefDecoder(RefDecoder::RefDecoderErr& ret, bool enable_analyzer) {
     parser_ = nullptr;
     enc_bytes_ = 0;
     burst_bytes_ = 0;
-    memset(&video_param_, 0, sizeof(video_param_));
+    video_param_ = VideoFrameParam();
 
     codec_handle_ = new aom_codec_ctx_t();
     if (codec_handle_ == nullptr) {
@@ -419,6 +395,8 @@ RefDecoder::RefDecoderErr RefDecoder::get_frame(VideoFrame& frame) {
     trans_video_frame(img, frame);
     video_param_ = (VideoFrameParam)frame;
     dec_frame_cnt_++;
+    stream_info_.frame_bit_rate = enc_bytes_ / dec_frame_cnt_ * 8;
+    stream_info_.format = frame.format;
     return REF_CODEC_OK;
 }
 
@@ -442,8 +420,21 @@ void RefDecoder::trans_video_frame(const void* image_handle,
     memcpy(frame.planes, image->planes, sizeof(frame.planes));
     frame.bits_per_sample = image->bit_depth;
     // there is mismatch between "bit_depth" and "fmt", following is a patch
-    if (image->fmt | AOM_IMG_FMT_HIGHBITDEPTH)
+    if (image->fmt && AOM_IMG_FMT_HIGHBITDEPTH)
         frame.bits_per_sample = 10;
     frame.timestamp =
         init_timestamp_ + ((uint64_t)dec_frame_cnt_ * frame_interval_);
+}
+
+void RefDecoder::control(int ctrl_id, int arg) {
+    const aom_codec_err_t res =
+        aom_codec_control_((aom_codec_ctx_t*)codec_handle_, ctrl_id, arg);
+    ASSERT_EQ(AOM_CODEC_OK, res) << RefDecoderErr();
+}
+
+void RefDecoder::set_invert_tile_decoding_order() {
+    this->control(AV1_INVERT_TILE_DECODE_ORDER, 1);
+    this->control(AV1_SET_DECODE_TILE_ROW, -1);
+    this->control(AV1_SET_DECODE_TILE_COL, -1);
+    this->control(AV1_SET_TILE_MODE, 0);
 }

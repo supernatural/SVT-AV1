@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file RefDecoder.h
@@ -45,14 +51,14 @@ class RefDecoder {
         /*!\brief Algorithm does not have required capability */
         REF_CODEC_INCAPABLE = 0 - AOM_CODEC_INCAPABLE,
 
-        /*!\brief The given bitstream is not supported.
+        /*!\brief The given Bitstream is not supported.
          *
-         * The bitstream was unable to be parsed at the highest level. The
+         * The Bitstream was unable to be parsed at the highest level. The
          * decoder is unable to proceed. This error \ref SHOULD be treated as
          * fatal to the stream. */
         REF_CODEC_UNSUP_BITSTREAM = 0 - AOM_CODEC_UNSUP_BITSTREAM,
 
-        /*!\brief Encoded bitstream uses an unsupported feature
+        /*!\brief Encoded Bitstream uses an unsupported feature
          *
          * The decoder does not implement a feature required by the encoder.
          * This return code should only be used for features that prevent future
@@ -93,8 +99,10 @@ class RefDecoder {
         std::vector<int> frame_type_list;
         uint32_t profile;
         int monochrome;  // Monochorme video
-        int bit_depth;
+        VideoColorFormat format;
+        uint32_t bit_depth;
         uint32_t sb_size;
+        bool still_pic;
         /* coding options */
         int force_integer_mv;
         int enable_filter_intra;
@@ -104,9 +112,10 @@ class RefDecoder {
         int enable_jnt_comp;
         int enable_ref_frame_mvs;
         int enable_warped_motion;
-        int enable_cdef;
+        int cdef_level;
         int enable_restoration;
         int film_grain_params_present;
+        int enable_superres;
 
         uint32_t tile_rows;
         uint32_t tile_cols;
@@ -114,16 +123,19 @@ class RefDecoder {
         uint32_t
             ext_block_flag; /**< if contains extended block, 0--no, 1--yes */
         std::vector<uint32_t> qindex_list;
-        uint32_t max_qindex;
-        uint32_t min_qindex;
-        uint32_t max_intra_period;
+        int16_t max_qindex;
+        int16_t min_qindex;
+        int32_t max_intra_period;
+        uint32_t frame_bit_rate;
         StreamInfo() {
+            format = IMG_FMT_420;
             tile_rows = 0;
             tile_cols = 0;
             min_block_size = 128;
             ext_block_flag = 0;
             max_qindex = 0;
             min_qindex = 255;
+            frame_bit_rate = 0;
             frame_type_list.clear();
             qindex_list.clear();
         }
@@ -172,6 +184,9 @@ class RefDecoder {
      * @param height  height of source video frame
      */
     void set_resolution(const uint32_t width, const uint32_t height);
+
+    void set_invert_tile_decoding_order();
+    void control(int ctrl_id, int arg);
 
   private:
     /** Tool of translation from AOM image info to a video frame

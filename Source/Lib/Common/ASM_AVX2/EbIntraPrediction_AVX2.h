@@ -1,6 +1,12 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
 #ifndef EbIntraPrediction_AVX2_h
@@ -10,10 +16,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    // Weights are quadratic from '1' to '1 / BlockSize', scaled by
-    // 2^sm_weight_log2_scale.
-    static const int32_t sm_weight_log2_scale = 8;
-    // max(block_size_wide[BLOCK_LARGEST], block_size_high[BLOCK_LARGEST])
+// Weights are quadratic from '1' to '1 / BlockSize', scaled by
+// 2^sm_weight_log2_scale.
+static const int32_t sm_weight_log2_scale = 8;
+// max(block_size_wide[BLOCK_LARGEST], block_size_high[BLOCK_LARGEST])
 #define MAX_BLOCK_DIM 64
 /* clang-format off */
     static const uint8_t sm_weight_arrays[2 * MAX_BLOCK_DIM] = {
@@ -36,156 +42,6 @@ extern "C" {
         65, 61, 57, 54, 50, 47, 44, 41, 38, 35, 32, 29, 27, 25, 22, 20, 18, 16, 15,
         13, 12, 10, 9, 8, 7, 6, 6, 5, 5, 4, 4, 4,
     };
-
-    void intra_mode_angular_av1_z1_16bit_4x4_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z1_16bit_8x8_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z1_16bit_16x16_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z1_16bit_32x32_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z1_16bit_64x64_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z2_16bit_4x4_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z2_16bit_8x8_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z2_16bit_16x16_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z2_16bit_32x32_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z2_16bit_64x64_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z3_16bit_4x4_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z3_16bit_8x8_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z3_16bit_16x16_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z3_16bit_32x32_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
-
-    void intra_mode_angular_av1_z3_16bit_64x64_avx2(
-        const uint32_t  size,
-        uint16_t       *ref_samples,
-        uint16_t       *dst,
-        const uint32_t  prediction_buffer_stride,
-        const EbBool    skip,
-        uint16_t        dx,
-        uint16_t        dy,
-        uint16_t        bd);
 
 #ifdef __cplusplus
 }

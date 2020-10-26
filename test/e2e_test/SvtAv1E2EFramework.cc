@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file SvtAv1E2EFramework.cc
@@ -15,18 +21,17 @@
 #include "EbSvtAv1Enc.h"
 #include "Y4mVideoSource.h"
 #include "YuvVideoSource.h"
+#include "DummyVideoSource.h"
 #include "gtest/gtest.h"
 #include "EbDefinitions.h"
 #include "RefDecoder.h"
 #include "SvtAv1E2EFramework.h"
 #include "CompareTools.h"
+#include "ConfigEncoder.h"
 
-#if _WIN32
-#define fseeko64 _fseeki64
-#define ftello64 _ftelli64
-#else
-#define fseeko64 fseek
-#define ftello64 ftell
+#ifdef _WIN32
+#define fseeko _fseeki64
+#define ftello _ftelli64
 #endif
 
 using namespace svt_av1_e2e_test;
@@ -41,38 +46,49 @@ VideoSource *SvtAv1E2ETestFramework::prepare_video_src(
                                        std::get<2>(vector),
                                        std::get<3>(vector),
                                        std::get<4>(vector),
-                                       std::get<5>(vector));
+                                       (uint8_t)std::get<5>(vector));
         break;
     case Y4M_VIDEO_FILE:
         video_src = new Y4MVideoSource(std::get<0>(vector),
                                        std::get<2>(vector),
                                        std::get<3>(vector),
                                        std::get<4>(vector),
-                                       std::get<5>(vector),
+                                       (uint8_t)std::get<5>(vector),
                                        std::get<6>(vector));
+        break;
+    case DUMMY_SOURCE:
+        video_src = new DummyVideoSource(std::get<2>(vector),
+                                         std::get<3>(vector),
+                                         std::get<4>(vector),
+                                         (uint8_t)std::get<5>(vector),
+                                         std::get<6>(vector));
         break;
     default: assert(0); break;
     }
     return video_src;
 }
 
-void SvtAv1E2ETestFramework::setup_src_param(const VideoSource *source,
-                                             EbSvtAv1EncConfiguration &config) {
-    VideoColorFormat fmt = source->get_image_format();
+EbColorFormat SvtAv1E2ETestFramework::setup_video_format(VideoColorFormat fmt) {
     switch (fmt) {
     case IMG_FMT_420:
-    case IMG_FMT_420P10_PACKED: config.encoder_color_format = EB_YUV420; break;
+    case IMG_FMT_420P10_PACKED: return EB_YUV420;
     case IMG_FMT_422:
-    case IMG_FMT_422P10_PACKED: config.encoder_color_format = EB_YUV422; break;
+    case IMG_FMT_422P10_PACKED: return EB_YUV422;
     case IMG_FMT_444:
-    case IMG_FMT_444P10_PACKED: config.encoder_color_format = EB_YUV444; break;
+    case IMG_FMT_444P10_PACKED: return EB_YUV444;
     default: assert(0); break;
     }
+    return EB_YUV400;
+}
+
+void SvtAv1E2ETestFramework::setup_src_param(const VideoSource *source,
+                                             EbSvtAv1EncConfiguration &config) {
+    config.encoder_color_format =
+        setup_video_format(source->get_image_format());
     config.source_width = source->get_width_with_padding();
     config.source_height = source->get_height_with_padding();
     config.encoder_bit_depth = source->get_bit_depth();
     config.compressed_ten_bit_format = source->get_compressed_10bit_mode();
-    config.frames_to_be_encoded = source->get_frame_count();
 }
 
 SvtAv1E2ETestFramework::SvtAv1E2ETestFramework() : enc_setting(GetParam()) {
@@ -92,6 +108,8 @@ SvtAv1E2ETestFramework::SvtAv1E2ETestFramework() : enc_setting(GetParam()) {
     enable_stat = false;
     enable_save_bitstream = false;
     enable_analyzer = false;
+    enable_config = false;
+    enc_config_ = create_enc_config();
 }
 
 SvtAv1E2ETestFramework::~SvtAv1E2ETestFramework() {
@@ -99,13 +117,30 @@ SvtAv1E2ETestFramework::~SvtAv1E2ETestFramework() {
         delete collect_;
         collect_ = nullptr;
     }
+    if (enc_config_) {
+        release_enc_config(enc_config_);
+        enc_config_ = nullptr;
+    }
 }
 
 void SvtAv1E2ETestFramework::config_test() {
     enable_stat = true;
+    if (enable_config) {
+        // iterate the mappings and update config
+        for (auto &x : enc_setting.setting) {
+            set_enc_config(enc_config_, x.first.c_str(), x.second.c_str());
+            printf("EncSetting: %s = %s\n", x.first.c_str(), x.second.c_str());
+        }
+    }
 }
 
 void SvtAv1E2ETestFramework::update_enc_setting() {
+    if (enable_config) {
+        copy_enc_param(&av1enc_ctx_.enc_params, enc_config_);
+        setup_src_param(video_src_, av1enc_ctx_.enc_params);
+        if (recon_queue_)
+            av1enc_ctx_.enc_params.recon_enabled = 1;
+    }
 }
 
 void SvtAv1E2ETestFramework::post_process() {
@@ -130,20 +165,20 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
     uint32_t width = video_src_->get_width_with_padding();
     uint32_t height = video_src_->get_height_with_padding();
     uint32_t bit_depth = video_src_->get_bit_depth();
-    ASSERT_GT(width, 0) << "Video vector width error.";
-    ASSERT_GT(height, 0) << "Video vector height error.";
+    ASSERT_GT(width, 0u) << "Video vector width error.";
+    ASSERT_GT(height, 0u) << "Video vector height error.";
     ASSERT_TRUE(bit_depth == 10 || bit_depth == 8)
         << "Video vector bitDepth error.";
 
     //
     // Init handle
     //
-    return_error = eb_init_handle(
+    return_error = svt_av1_enc_init_handle(
         &av1enc_ctx_.enc_handle, &av1enc_ctx_, &av1enc_ctx_.enc_params);
     ASSERT_EQ(return_error, EB_ErrorNone)
-        << "eb_init_handle return error:" << return_error;
+        << "svt_av1_enc_init_handle return error:" << return_error;
     ASSERT_NE(av1enc_ctx_.enc_handle, nullptr)
-        << "eb_init_handle return null handle.";
+        << "svt_av1_enc_init_handle return null handle.";
     setup_src_param(video_src_, av1enc_ctx_.enc_params);
     av1enc_ctx_.enc_params.recon_enabled = 0;
 
@@ -162,11 +197,11 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
     // Output buffer
     av1enc_ctx_.output_stream_buffer = new EbBufferHeaderType;
     ASSERT_NE(av1enc_ctx_.output_stream_buffer, nullptr)
-        << "Malloc memory for outputStreamBuffer failed.";
+        << "Malloc memory for output_stream_buffer failed.";
     av1enc_ctx_.output_stream_buffer->p_buffer =
         new uint8_t[EB_OUTPUTSTREAMBUFFERSIZE_MACRO(width * height)];
     ASSERT_NE(av1enc_ctx_.output_stream_buffer->p_buffer, nullptr)
-        << "Malloc memory for outputStreamBuffer->p_buffer failed.";
+        << "Malloc memory for output_stream_buffer->p_buffer failed.";
     av1enc_ctx_.output_stream_buffer->size = sizeof(EbBufferHeaderType);
     av1enc_ctx_.output_stream_buffer->n_alloc_len =
         EB_OUTPUTSTREAMBUFFERSIZE_MACRO(width * height);
@@ -179,10 +214,10 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
     if (enable_recon) {
         // create recon queue to store the recon yuvs
         VideoFrameParam param;
-        memset(&param, 0, sizeof(param));
         param.format = video_src_->get_image_format();
         param.width = video_src_->get_width_with_padding();
         param.height = video_src_->get_height_with_padding();
+        param.bits_per_sample = video_src_->get_bit_depth();
         recon_queue_ = create_frame_queue(param);
         ASSERT_NE(recon_queue_, nullptr) << "can not create recon sink!!";
         if (recon_queue_)
@@ -190,26 +225,26 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
     }
 
     // set the parameter to encoder
-    return_error = eb_svt_enc_set_parameter(av1enc_ctx_.enc_handle,
+    return_error = svt_av1_enc_set_parameter(av1enc_ctx_.enc_handle,
                                             &av1enc_ctx_.enc_params);
     ASSERT_EQ(return_error, EB_ErrorNone)
-        << "eb_svt_enc_set_parameter return error:" << return_error;
+        << "svt_av1_enc_set_parameter return error:" << return_error;
 
     // initial encoder
-    return_error = eb_init_encoder(av1enc_ctx_.enc_handle);
+    return_error = svt_av1_enc_init(av1enc_ctx_.enc_handle);
     ASSERT_EQ(return_error, EB_ErrorNone)
-        << "eb_init_encoder return error:" << return_error;
+        << "svt_av1_enc_init return error:" << return_error;
 
     // Get ivf header
-    return_error = eb_svt_enc_stream_header(av1enc_ctx_.enc_handle,
+    return_error = svt_av1_enc_stream_header(av1enc_ctx_.enc_handle,
                                             &av1enc_ctx_.output_stream_buffer);
     ASSERT_EQ(return_error, EB_ErrorNone)
-        << "eb_svt_enc_stream_header return error:" << return_error;
+        << "svt_av1_enc_stream_header return error:" << return_error;
     ASSERT_NE(av1enc_ctx_.output_stream_buffer, nullptr)
-        << "eb_svt_enc_stream_header return null output buffer."
+        << "svt_av1_enc_stream_header return null output buffer."
         << return_error;
 
-#if TILES
+#if TILES_PARALLEL
     EbBool has_tiles = (EbBool)(av1enc_ctx_.enc_params.tile_columns ||
                                 av1enc_ctx_.enc_params.tile_rows);
 #else
@@ -221,6 +256,8 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
     // create reference decoder if required.
     if (enable_decoder) {
         refer_dec_ = create_reference_decoder(enable_analyzer);
+        if (enable_invert_tile_decoding)
+            refer_dec_->set_invert_tile_decoding_order();
         ASSERT_NE(refer_dec_, nullptr) << "can not create reference decoder!!";
     }
 
@@ -236,14 +273,14 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
 }
 
 void SvtAv1E2ETestFramework::deinit_test() {
-    EbErrorType return_error = eb_deinit_encoder(av1enc_ctx_.enc_handle);
+    EbErrorType return_error = svt_av1_enc_deinit(av1enc_ctx_.enc_handle);
     ASSERT_EQ(return_error, EB_ErrorNone)
-        << "eb_deinit_encoder return error:" << return_error;
+        << "svt_av1_enc_deinit return error:" << return_error;
 
     // Destruct the component
-    return_error = eb_deinit_handle(av1enc_ctx_.enc_handle);
+    return_error = svt_av1_enc_deinit_handle(av1enc_ctx_.enc_handle);
     ASSERT_EQ(return_error, EB_ErrorNone)
-        << "eb_deinit_handle return error:" << return_error;
+        << "svt_av1_enc_deinit_handle return error:" << return_error;
     av1enc_ctx_.enc_handle = nullptr;
 
     // Clear the intput and output buffer
@@ -280,7 +317,7 @@ void SvtAv1E2ETestFramework::deinit_test() {
     delete psnr_src_;
     psnr_src_ = nullptr;
 
-    // close the bitstream file
+    // close the Bitstream file
     if (output_file_) {
         delete output_file_;
         output_file_ = nullptr;
@@ -331,7 +368,7 @@ void SvtAv1E2ETestFramework::run_encode_process() {
     EbErrorType return_error = EB_ErrorNone;
 
     uint32_t frame_count = video_src_->get_frame_count();
-    ASSERT_GT(frame_count, 0) << "video srouce file does not contain frame!!";
+    ASSERT_GT(frame_count, 0u) << "video srouce file does not contain frame!!";
     if (recon_queue_)
         recon_queue_->set_frame_count(frame_count);
 
@@ -371,10 +408,10 @@ void SvtAv1E2ETestFramework::run_encode_process() {
                         video_src_->get_frame_qp(video_src_->get_frame_index());
                     // Send the picture
                     EXPECT_EQ(EB_ErrorNone,
-                              return_error = eb_svt_enc_send_picture(
+                              return_error = svt_av1_enc_send_picture(
                                   av1enc_ctx_.enc_handle,
                                   av1enc_ctx_.input_picture_buffer))
-                        << "eb_svt_enc_send_picture error at: "
+                        << "svt_av1_enc_send_picture error at: "
                         << av1enc_ctx_.input_picture_buffer->pts;
                 }
 
@@ -391,9 +428,9 @@ void SvtAv1E2ETestFramework::run_encode_process() {
                     headerPtrLast.pic_type = EB_AV1_INVALID_PICTURE;
                     av1enc_ctx_.input_picture_buffer->flags = EB_BUFFERFLAG_EOS;
                     EXPECT_EQ(EB_ErrorNone,
-                              return_error = eb_svt_enc_send_picture(
+                              return_error = svt_av1_enc_send_picture(
                                   av1enc_ctx_.enc_handle, &headerPtrLast))
-                        << "eb_svt_enc_send_picture EOS error";
+                        << "svt_av1_enc_send_picture EOS error";
                 }
             }
         }
@@ -401,8 +438,7 @@ void SvtAv1E2ETestFramework::run_encode_process() {
         // get reconstructed frame
         if (recon_queue_ && !rec_file_eos) {
             TimeAutoCount counter(RECON, collect_);
-            if (!rec_file_eos)
-                get_recon_frame(av1enc_ctx_, recon_queue_, rec_file_eos);
+            get_recon_frame(av1enc_ctx_, recon_queue_, rec_file_eos);
         }
 
         if (!enc_file_eos) {
@@ -413,8 +449,9 @@ void SvtAv1E2ETestFramework::run_encode_process() {
                 EbBufferHeaderType *enc_out = nullptr;
                 {
                     TimeAutoCount counter(ENCODING, collect_);
-                    int pic_send_done = (src_file_eos && rec_file_eos) ? 1 : 0;
-                    return_error = eb_svt_get_packet(
+                    uint8_t pic_send_done =
+                        (src_file_eos && rec_file_eos) ? 1 : 0;
+                    return_error = svt_av1_enc_get_packet(
                         av1enc_ctx_.enc_handle, &enc_out, pic_send_done);
                     ASSERT_NE(return_error, EB_ErrorMax)
                         << "Error while encoding, code:" << enc_out->flags;
@@ -445,7 +482,7 @@ void SvtAv1E2ETestFramework::run_encode_process() {
 
                 // Release the output buffer
                 if (enc_out != nullptr)
-                    eb_svt_release_out_buffer(&enc_out);
+                    svt_av1_enc_release_out_buffer(&enc_out);
             } while (src_file_eos);
         }  // if (!enc_file_eos)
     } while (!rec_file_eos || !src_file_eos || !enc_file_eos);
@@ -493,7 +530,8 @@ void SvtAv1E2ETestFramework::run_death_test() {
             },
             ::testing::ExitedWithCode(0),
             ".*")
-            << "Fatal Error on running test case " << enc_setting.to_string(fn);
+            << "Fatal Error on running test case " << enc_setting.to_string(fn)
+            << "\ncli command: " << enc_setting.to_cli(test_vector);
     }
 }
 
@@ -525,23 +563,6 @@ void SvtAv1E2ETestFramework::write_output_header() {
         fwrite(header, 1, IVF_STREAM_HEADER_SIZE, output_file_->file);
 }
 
-static void update_prev_ivf_header(
-    svt_av1_e2e_test::SvtAv1E2ETestFramework::IvfFile *ivf) {
-    char header[4];  // only for the number of bytes
-    if (ivf && ivf->file && ivf->byte_count_since_ivf != 0) {
-        fseeko64(
-            ivf->file,
-            (-(int32_t)(ivf->byte_count_since_ivf + IVF_FRAME_HEADER_SIZE)),
-            SEEK_CUR);
-        mem_put_le32(&header[0], (int32_t)(ivf->byte_count_since_ivf));
-        fwrite(header, 1, 4, ivf->file);
-        fseeko64(ivf->file,
-                 (ivf->byte_count_since_ivf + IVF_FRAME_HEADER_SIZE - 4),
-                 SEEK_CUR);
-        ivf->byte_count_since_ivf = 0;
-    }
-}
-
 static void write_ivf_frame_header(
     svt_av1_e2e_test::SvtAv1E2ETestFramework::IvfFile *ivf,
     uint32_t byte_count) {
@@ -567,77 +588,8 @@ static void write_ivf_frame_header(
 
 void SvtAv1E2ETestFramework::write_compress_data(
     const EbBufferHeaderType *output) {
-    // Check for the flags EB_BUFFERFLAG_HAS_TD and
-    // EB_BUFFERFLAG_SHOW_EXT
-    switch (output->flags & 0x00000006) {
-    case (EB_BUFFERFLAG_HAS_TD | EB_BUFFERFLAG_SHOW_EXT):
-        // terminate previous ivf packet, update the combined size of
-        // packets sent
-        update_prev_ivf_header(output_file_);
-
-        // Write a new IVF frame header to file as a TD is in the packet
-        write_ivf_frame_header(
-            output_file_,
-            output->n_filled_len - (obu_frame_header_size_ + TD_SIZE));
-        fwrite(output->p_buffer,
-               1,
-               output->n_filled_len - (obu_frame_header_size_ + TD_SIZE),
-               output_file_->file);
-
-        // An EB_BUFFERFLAG_SHOW_EXT means that another TD has been added to
-        // the packet to show another frame, a new IVF is needed
-        write_ivf_frame_header(output_file_,
-                               (obu_frame_header_size_ + TD_SIZE));
-        fwrite(output->p_buffer + output->n_filled_len -
-                   (obu_frame_header_size_ + TD_SIZE),
-               1,
-               (obu_frame_header_size_ + TD_SIZE),
-               output_file_->file);
-
-        break;
-    case (EB_BUFFERFLAG_HAS_TD):
-        // terminate previous ivf packet, update the combined size of
-        // packets sent
-        update_prev_ivf_header(output_file_);
-
-        // Write a new IVF frame header to file as a TD is in the packet
-        write_ivf_frame_header(output_file_, output->n_filled_len);
-        fwrite(output->p_buffer, 1, output->n_filled_len, output_file_->file);
-        break;
-    case (EB_BUFFERFLAG_SHOW_EXT):
-        // this case means that there's only one TD in this packet and is
-        // relater
-        fwrite(output->p_buffer,
-               1,
-               output->n_filled_len - (obu_frame_header_size_ + TD_SIZE),
-               output_file_->file);
-        // this packet will be part of the previous IVF header
-        output_file_->byte_count_since_ivf +=
-            (output->n_filled_len - (obu_frame_header_size_ + TD_SIZE));
-
-        // terminate previous ivf packet, update the combined size of
-        // packets sent
-        update_prev_ivf_header(output_file_);
-
-        // An EB_BUFFERFLAG_SHOW_EXT means that another TD has been added to
-        // the packet to show another frame, a new IVF is needed
-        write_ivf_frame_header(output_file_,
-                               (obu_frame_header_size_ + TD_SIZE));
-        fwrite(output->p_buffer + output->n_filled_len -
-                   (obu_frame_header_size_ + TD_SIZE),
-               1,
-               (obu_frame_header_size_ + TD_SIZE),
-               output_file_->file);
-
-        break;
-    default:
-        // This is a packet without a TD, write it straight to file
-        fwrite(output->p_buffer, 1, output->n_filled_len, output_file_->file);
-
-        // this packet will be part of the previous IVF header
-        output_file_->byte_count_since_ivf += (output->n_filled_len);
-        break;
-    }
+    write_ivf_frame_header(output_file_, output->n_filled_len);
+    fwrite(output->p_buffer, 1, output->n_filled_len, output_file_->file);
 }
 
 void SvtAv1E2ETestFramework::process_compress_data(
@@ -649,27 +601,18 @@ void SvtAv1E2ETestFramework::process_compress_data(
         return;
     }
 
-    if (data->flags & EB_BUFFERFLAG_SHOW_EXT) {
-        uint32_t first_part_size =
-            data->n_filled_len - obu_frame_header_size_ - TD_SIZE;
-        decode_compress_data(data->p_buffer, first_part_size);
-        decode_compress_data(data->p_buffer + first_part_size,
-                             obu_frame_header_size_ + TD_SIZE);
-    } else {
-        decode_compress_data(data->p_buffer, data->n_filled_len);
-    }
+    decode_compress_data(data->p_buffer, data->n_filled_len);
 }
 
 void SvtAv1E2ETestFramework::decode_compress_data(const uint8_t *data,
                                                   const uint32_t size) {
     ASSERT_NE(data, nullptr);
-    ASSERT_GT(size, 0);
+    ASSERT_GT(size, 0u);
 
     // input the compressed data into decoder
     ASSERT_EQ(refer_dec_->decode(data, size), RefDecoder::REF_CODEC_OK);
 
     VideoFrame ref_frame;
-    memset(&ref_frame, 0, sizeof(ref_frame));
     while (refer_dec_->get_frame(ref_frame) == RefDecoder::REF_CODEC_OK) {
         if (recon_queue_) {
             // compare tools
@@ -708,32 +651,26 @@ void SvtAv1E2ETestFramework::check_psnr(const VideoFrame &frame) {
 }
 
 static bool transfer_frame_planes(VideoFrame *frame) {
-    uint32_t luma_size = frame->stride[0] * frame->height;
-    if (frame->buf_size != 4 * luma_size) {
+    if (frame->buf_size != VideoFrame::calculate_max_frame_size(*frame)) {
         printf("buffer size doesn't match!\n");
         return false;
     }
-    bool half_height = false;
-    if (frame->format == IMG_FMT_420P10_PACKED ||
-        frame->format == IMG_FMT_422P10_PACKED ||
-        frame->format == IMG_FMT_444P10_PACKED) {
-        luma_size *= 2;
-    }
+
+    uint32_t height_scale = 1;
     if (frame->format == IMG_FMT_420 ||
         frame->format == IMG_FMT_420P10_PACKED ||
-        frame->format == IMG_FMT_NV12) {
-        half_height = true;
+        frame->format == IMG_FMT_I420) {
+        height_scale = 2;
     }
     if (frame->stride[3]) {
         uint32_t offset = frame->stride[0] * frame->height +
                           ((frame->stride[1] + frame->stride[2]) *
-                           (half_height ? frame->height / 2 : frame->height));
+                           frame->height / height_scale);
         memcpy(frame->planes[3], frame->buffer + offset, frame->buf_size >> 2);
     }
     if (frame->stride[2]) {
         uint32_t offset = frame->stride[0] * frame->height +
-                          (frame->stride[1] *
-                           (half_height ? frame->height / 2 : frame->height));
+                          (frame->stride[1] * frame->height / height_scale);
         memcpy(frame->planes[2], frame->buffer + offset, frame->buf_size >> 2);
     }
     if (frame->stride[1]) {
@@ -752,14 +689,15 @@ void SvtAv1E2ETestFramework::get_recon_frame(const SvtAv1Context &ctxt,
         ASSERT_NE(new_frame->buffer, nullptr)
             << "can not get new buffer of recon frame!!";
 
-        EbBufferHeaderType recon_frame = {0};
+        EbBufferHeaderType recon_frame;
+        memset(&recon_frame, 0, sizeof(recon_frame));
         recon_frame.size = sizeof(EbBufferHeaderType);
         recon_frame.p_buffer = new_frame->buffer;
         recon_frame.n_alloc_len = new_frame->buf_size;
         recon_frame.p_app_private = nullptr;
         // non-blocking call until all input frames are sent
         EbErrorType recon_status =
-            eb_svt_get_recon(ctxt.enc_handle, &recon_frame);
+            svt_av1_get_recon(ctxt.enc_handle, &recon_frame);
         ASSERT_NE(recon_status, EB_ErrorMax)
             << "Error while outputing recon, code:" << recon_frame.flags;
         if (recon_status == EB_NoErrorEmptyQueue) {

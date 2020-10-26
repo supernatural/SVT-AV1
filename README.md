@@ -1,21 +1,23 @@
-# Scalable Video Technology for AV1 Encoder (SVT-AV1 Encoder)
+# Scalable Video Technology for AV1 (SVT-AV1 Encoder and Decoder)
 
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/OpenVisualCloud/SVT-AV1?branch=master&svg=true)](https://ci.appveyor.com/project/OpenVisualCloud/SVT-AV1)
-[![Travis Build Status](https://travis-ci.org/OpenVisualCloud/SVT-AV1.svg?branch=master)](https://travis-ci.org/OpenVisualCloud/SVT-AV1)
-[![Coverage Status](https://coveralls.io/repos/github/OpenVisualCloud/SVT-AV1/badge.svg?branch=master)](https://coveralls.io/github/OpenVisualCloud/SVT-AV1?branch=master)
+[![CI](https://github.com/AOMediaCodec/SVT-AV1/workflows/CI/badge.svg)](https://github.com/AOMediaCodec/SVT-AV1/actions?query=workflow%3ACI+branch%3Amaster)
+[![MSVC builds](https://github.com/AOMediaCodec/SVT-AV1/workflows/MSVC%20builds/badge.svg)](https://github.com/AOMediaCodec/SVT-AV1/actions?query=workflow%3A%22MSVC+builds%22+branch%3Amaster)
+[![macOS](https://github.com/AOMediaCodec/SVT-AV1/workflows/macOS/badge.svg)](https://github.com/AOMediaCodec/SVT-AV1/actions?query=workflow%3AmacOS+branch%3Amaster)
+[![Travis Build Status](https://travis-ci.com/AOMediaCodec/SVT-AV1.svg?branch=master)](https://travis-ci.com/AOMediaCodec/SVT-AV1)
 
-The Scalable Video Technology for AV1 Encoder (SVT-AV1 Encoder) is an AV1-compliant encoder library core. The SVT-AV1 development is a work-in-progress targeting performance levels applicable to both VOD and Live encoding / transcoding video applications.
+The Scalable Video Technology for AV1 (SVT-AV1 Encoder and Decoder) is an AV1-compliant encoder/decoder library core. The SVT-AV1 encoder development is a work-in-progress targeting performance levels applicable to both VOD and Live encoding / transcoding video applications. The SVT-AV1 decoder implementation is targeting future codec research activities.
 
 ## License
 
-SVT-AV1 Encoder is licensed under the OSI-approved BSD+Patent license. See [LICENSE](LICENSE.md) for details.
+SVT-AV1 is licensed under the Alliance for Open Media license and Patent License. See [LICENSE](LICENSE.md) and [PATENTS](PATENTS.md) for details. Please refer to the [license Q&A](https://01.org/svt/downloads/svt-av1-license-change-qa) if you have any questions about the licensing history of SVT-AV1.
 
 ## Documentation
 
-More details about the SVT-AV1 usage can be found under:
+More details about the SVT-AV1 usage and implementation can be found under:
 
 - [svt-av1-encoder-user-guide](Docs/svt-av1_encoder_user_guide.md)
 - [svt-av1-decoder-user-guide](Docs/svt-av1_decoder_user_guide.md)
+- [svt-av1-documentation-page](Docs/README.md)
 
 ## System Requirements
 
@@ -89,19 +91,6 @@ The SVT-AV1 Encoder library supports the x86 architecture
   - `cd Build/linux`
   - `./build.sh <release | debug>`
 
-  - __Note about macOS__
-
-    If you get
-
-    ``` none
-    errno: 24
-    Encoding
-    Could not allocate enough memory for channel 1
-    ```
-
-    while encoding, this can mean that the fd limit is too low.\
-    It is necessary to increase the amount of available file descriptors and the instructions to do so can be found [here](https://apple.lib.utah.edu/open-file-limits-on-os-x-what-they-are-why-increase-them-and-how-to-increase-them/).
-
 - __Sample Binaries location__
   - Binaries can be found under `Bin/Release` and/or `Bin/Debug`
 
@@ -115,6 +104,42 @@ The SVT-AV1 Encoder library supports the x86 architecture
   - Run the sample application to encode: `./SvtAv1EncApp -i [in.yuv] -w [width] -h [height] -b [out.ivf]`
   - Sample application supports reading from pipe. E.g. `ffmpeg -i [input.mp4] -nostdin -f rawvideo -pix_fmt yuv420p - | ./SvtAv1EncApp -i stdin -n [number_of_frames_to_encode] -w [width] -h [height]`
 
+## SVT-AV1 ffmpeg plugin installation
+
+### 1. Build and install SVT-AV1
+
+``` bash
+   git clone --depth=1 https://github.com/AOMediaCodec/SVT-AV1
+   cd SVT-AV1
+   cd Build
+   cmake .. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+   make -j $(nproc)
+   sudo make install
+```
+
+###  2. Enable libsvtav1 in FFmpeg
+
+NOTE: If you wish to use an FFmpeg tag or release before 4.4, please go [here](https://github.com/AOMediaCodec/SVT-AV1/tree/v0.8.4/ffmpeg_plugin) and consult that page to properly patch ffmpeg for use with SVT-AV1.
+
+``` bash
+   git clone --depth=1 https://github.com/FFmpeg/FFmpeg ffmpeg
+   cd ffmpeg
+   export LD_LIBRARY_PATH+=":/usr/local/lib"
+   export PKG_CONFIG_PATH+=":/usr/local/lib/pkgconfig"
+   ./configure --enable-libsvtav1
+   make -j $(nproc)
+```
+
+###  3. Verify that ffmpeg is working
+
+``` bash
+./ffmpeg -i input.mp4 -c:v libsvtav1 -y test.mp4
+```
+
+## How to evaluate by ready-to-run executables with docker
+
+Refer to the guide [here](https://github.com/AOMediaCodec/Dockerfiles/blob/master/doc/svt.md#Evaluate-SVT).
+
 ## Demo features and limitations
 
 - **Multi-instance support:** The multi-instance functionality is a demo feature implemented in the SVT-AV1 Encoder sample application as an example of one sample application using multiple encoding libraries. Encoding using the multi-instance support is limited to only 6 simultaneous streams. For example two channels encoding on Windows: `SvtAV1EncApp.exe -nch 2 -c firstchannel.cfg secondchannel.cfg`
@@ -122,11 +147,15 @@ The SVT-AV1 Encoder library supports the x86 architecture
 
 ## How to Contribute
 
-We welcome community contributions to the SVT-AV1 Encoder. Thank you for your time! By contributing to the project, you agree to the license and copyright terms in the OSI-approved BSD+Patent license and to the release of your contribution under these terms. See [LICENSE](LICENSE.md) for details.
+We welcome community contributions to the SVT-AV1 Encoder and Decoder. Thank you for your time! By contributing to the project, you agree to the license, patent and copyright terms in the AOM License and Patent License  and to the release of your contribution under these terms. See [LICENSE](LICENSE.md) and [PATENTS](PATENTS.md) for details.
+
+## Contributor agreement
+
+You will be required to execute the appropriate [contributor agreement](http://aomedia.org/license/) to ensure that the AOMedia Project has the right to distribute your changes.
 
 ### Contribution process
 
-- Follow the [coding guidelines](STYLE.md)
+- Follow the [coding guidelines](STYLE.md) and the [contributing guidelines](CONTRIBUTING.md)
 
 - Validate that your changes do not break a build
 
@@ -136,12 +165,12 @@ We welcome community contributions to the SVT-AV1 Encoder. Thank you for your ti
 
 ### How to Report Bugs and Provide Feedback
 
-Use the [Issues](https://github.com/OpenVisualCloud/SVT-AV1/issues) tab on Github. To avoid duplicate issues, please make sure you go through the existing issues before logging a new one.
+Use the [Issues](https://github.com/AOMediaCodec/SVT-AV1/issues) tab on Github. To avoid duplicate issues, please make sure you go through the existing issues before logging a new one.
 
 ## IRC
 
-`#svt` on Freenode. Join via [Freenode Webchat](https://webchat.freenode.net/?channels=svt) or use your favorite IRC client.
+`#svt` on Freenode. Join via [Freenode Webchat](https://webchat.freenode.net/?channels=svt) or use your favorite IRC client. A [public log](https://freenode.logbot.info/svt) is available.
 
-## Notices and Disclaimers
+## Performance tracker
 
-The notices and disclaimers can be found [here](NOTICES.md)
+Performance and raw data files available at http://videocodectracker.dev

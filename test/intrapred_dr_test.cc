@@ -1,14 +1,20 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file intrapred_dr_test.cc
  *
  * @brief Unit test for intra directional prediction :
- * - av1_highbd_dr_prediction_z{1, 2, 3}_avx2
- * - av1_dr_prediction_z{1, 2, 3}_avx2
+ * - eb_av1_highbd_dr_prediction_z{1, 2, 3}_avx2
+ * - eb_av1_dr_prediction_z{1, 2, 3}_avx2
  *
  * @author Cidana-Wenyao
  *
@@ -110,8 +116,8 @@ using Z3_HBD = void (*)(uint16_t *dst, ptrdiff_t stride, int bw, int bh,
                         int upsample_left, int dx, int dy, int bd);
 /**
  * @brief Unit test for intra directional prediction:
- * - av1_highbd_dr_prediction_z{1, 2, 3}_avx2
- * - av1_dr_prediction_z{1, 2, 3}_avx2
+ * - eb_av1_highbd_dr_prediction_z{1, 2, 3}_avx2
+ * - eb_av1_dr_prediction_z{1, 2, 3}_avx2
  *
  * Test strategy:
  * Verify this assembly code by comparing with reference c implementation.
@@ -181,8 +187,8 @@ class DrPredTest {
                 above_data_[i] = left_data_[i] = (1 << bd_) - 1;
         } else {
             for (int i = 0; i < neighbor_buf_size; ++i) {
-                above_data_[i] = rnd.random();
-                left_data_[i] = rnd.random();
+                above_data_[i] = (Sample)rnd.random();
+                left_data_[i] = (Sample)rnd.random();
             }
         }
     }
@@ -254,8 +260,8 @@ class LowbdZ1PredTest : public DrPredTest<uint8_t, Z1_LBD> {
     LowbdZ1PredTest() {
         start_angle_ = z1_start_angle;
         stop_angle_ = start_angle_ + 90;
-        ref_func_ = av1_dr_prediction_z1_c;
-        tst_func_ = av1_dr_prediction_z1_avx2;
+        ref_func_ = eb_av1_dr_prediction_z1_c;
+        tst_func_ = eb_av1_dr_prediction_z1_avx2;
         bd_ = 8;
 
         common_init();
@@ -289,8 +295,8 @@ class LowbdZ2PredTest : public DrPredTest<uint8_t, Z2_LBD> {
     LowbdZ2PredTest() {
         start_angle_ = z2_start_angle;
         stop_angle_ = start_angle_ + 90;
-        ref_func_ = av1_dr_prediction_z2_c;
-        tst_func_ = av1_dr_prediction_z2_avx2;
+        ref_func_ = eb_av1_dr_prediction_z2_c;
+        tst_func_ = eb_av1_dr_prediction_z2_avx2;
         bd_ = 8;
 
         common_init();
@@ -326,8 +332,8 @@ class LowbdZ3PredTest : public DrPredTest<uint8_t, Z3_LBD> {
     LowbdZ3PredTest() {
         start_angle_ = z3_start_angle;
         stop_angle_ = start_angle_ + 90;
-        ref_func_ = av1_dr_prediction_z3_c;
-        tst_func_ = av1_dr_prediction_z3_avx2;
+        ref_func_ = eb_av1_dr_prediction_z3_c;
+        tst_func_ = eb_av1_dr_prediction_z3_avx2;
         bd_ = 8;
 
         common_init();
@@ -372,8 +378,8 @@ class HighbdZ1PredTest : public DrPredTest<uint16_t, Z1_HBD> {
     HighbdZ1PredTest() {
         start_angle_ = z1_start_angle;
         stop_angle_ = start_angle_ + 90;
-        ref_func_ = av1_highbd_dr_prediction_z1_c;
-        tst_func_ = av1_highbd_dr_prediction_z1_avx2;
+        ref_func_ = eb_av1_highbd_dr_prediction_z1_c;
+        tst_func_ = eb_av1_highbd_dr_prediction_z1_avx2;
         bd_ = 10;
 
         common_init();
@@ -409,8 +415,8 @@ class HighbdZ2PredTest : public DrPredTest<uint16_t, Z2_HBD> {
     HighbdZ2PredTest() {
         start_angle_ = z2_start_angle;
         stop_angle_ = start_angle_ + 90;
-        ref_func_ = av1_highbd_dr_prediction_z2_c;
-        tst_func_ = av1_highbd_dr_prediction_z2_avx2;
+        ref_func_ = eb_av1_highbd_dr_prediction_z2_c;
+        tst_func_ = eb_av1_highbd_dr_prediction_z2_avx2;
         bd_ = 10;
 
         common_init();
@@ -448,8 +454,8 @@ class HighbdZ3PredTest : public DrPredTest<uint16_t, Z3_HBD> {
     HighbdZ3PredTest() {
         start_angle_ = z3_start_angle;
         stop_angle_ = start_angle_ + 90;
-        ref_func_ = av1_highbd_dr_prediction_z3_c;
-        tst_func_ = av1_highbd_dr_prediction_z3_avx2;
+        ref_func_ = eb_av1_highbd_dr_prediction_z3_c;
+        tst_func_ = eb_av1_highbd_dr_prediction_z3_avx2;
         bd_ = 10;
 
         common_init();

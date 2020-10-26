@@ -1,16 +1,20 @@
 #
 # Copyright(c) 2019 Netflix, Inc.
-# SPDX - License - Identifier: BSD - 2 - Clause - Patent
+#
+# This source code is subject to the terms of the BSD 2 Clause License and
+# the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+# was not distributed with this source code in the LICENSE file, you can
+# obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+# Media Patent License 1.0 was not distributed with this source code in the
+# PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 #
 
 # APP Directory CMakeLists.txt
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
 
 # Include Subdirectories
 include_directories(${PROJECT_SOURCE_DIR}/test/
     ${PROJECT_SOURCE_DIR}/test/ref
-    ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/
+    ${CMAKE_OUTPUT_DIRECTORY}/
     ${PROJECT_SOURCE_DIR}/third_party/googletest/include third_party/googletest/src
     ${PROJECT_SOURCE_DIR}/Source/API
     ${PROJECT_SOURCE_DIR}/Source/Lib/Common/Codec
@@ -19,17 +23,26 @@ include_directories(${PROJECT_SOURCE_DIR}/test/
     ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSSE3/
     ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE4_1/
     ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX2/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX512/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/C_DEFAULT/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE2/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSSE3/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE4_1/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_AVX2/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_AVX512/
     ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/Codec
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/Globals
     ${PROJECT_SOURCE_DIR}/Source/Lib/Decoder/Codec
     ${PROJECT_SOURCE_DIR}/Source/App/EncApp
-    ${PROJECT_SOURCE_DIR}/Source/API)
+    ${PROJECT_SOURCE_DIR}/Source/API
+    ${PROJECT_SOURCE_DIR}/third_party/fastfeat/)
 
 # Define helper functions and macros used by Google Test.
 include(../third_party/googletest/cmake/internal_utils.cmake)
 
 if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 -D_ALLOW_KEYWORD_MACROS")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 -D_ALLOW_KEYWORD_MACROS")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_ALLOW_KEYWORD_MACROS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS")
 endif()
 
 # When other libraries are using a shared version of runtime libraries,
@@ -41,6 +54,11 @@ option(gtest_force_shared_crt
 add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING=1)
 
 enable_testing()
+
+if(UNIX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+endif()
 
 file(GLOB all_files
     "*.h"
@@ -54,11 +72,20 @@ file(GLOB all_files
 
 set(lib_list
     $<TARGET_OBJECTS:COMMON_CODEC>
+    $<TARGET_OBJECTS:FASTFEAT>
     $<TARGET_OBJECTS:COMMON_C_DEFAULT>
     $<TARGET_OBJECTS:COMMON_ASM_SSE2>
     $<TARGET_OBJECTS:COMMON_ASM_SSSE3>
     $<TARGET_OBJECTS:COMMON_ASM_SSE4_1>
     $<TARGET_OBJECTS:COMMON_ASM_AVX2>
+    $<TARGET_OBJECTS:COMMON_ASM_AVX512>
+    $<TARGET_OBJECTS:ENCODER_C_DEFAULT>
+    $<TARGET_OBJECTS:ENCODER_ASM_SSE2>
+    $<TARGET_OBJECTS:ENCODER_ASM_SSSE3>
+    $<TARGET_OBJECTS:ENCODER_ASM_SSE4_1>
+    $<TARGET_OBJECTS:ENCODER_ASM_AVX2>
+    $<TARGET_OBJECTS:ENCODER_ASM_AVX512>
+    $<TARGET_OBJECTS:ENCODER_GLOBALS>
     gtest_all)
 if(UNIX)
   # App Source Files
@@ -80,9 +107,11 @@ else()
         COMPILE_DEFINITIONS "GTEST_LINKED_AS_SHARED_LIBRARY=1")
 endif()
 
+add_dependencies(SvtAv1UnitTests SvtAv1Enc SvtAv1Dec)
+
 install(TARGETS SvtAv1UnitTests RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-add_test(SvtAv1UnitTests ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/SvtAv1UnitTests)
+add_test(SvtAv1UnitTests ${CMAKE_OUTPUT_DIRECTORY}/SvtAv1UnitTests)
 
 add_subdirectory(api_test)
 add_subdirectory(e2e_test)

@@ -1,17 +1,13 @@
 /*
+ * Copyright(c) 2019 Netflix, Inc.
  * Copyright (c) 2016, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
-
-/*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 
 /******************************************************************************
@@ -31,9 +27,8 @@
 #include "TxfmRef.h"
 namespace svt_av1_test_reference {
 
-double get_scale_factor(Txfm2DFlipCfg &cfg, const int tx_width,
+double get_scale_factor(Txfm2dFlipCfg &cfg, const int tx_width,
                         const int tx_height) {
-    const double Sqrt2 = 1.4142135623730950488016887242097f;
     const int8_t *shift = cfg.shift;
     const int amplify_bit = shift[0] + shift[1] + shift[2];
     double scale_factor =
@@ -147,6 +142,7 @@ void reference_idtx_1d(const double *in, double *out, int size) {
     case 8: scale = 2; break;
     case 16: scale = 2 * Sqrt2; break;
     case 32: scale = 4; break;
+    case 64: scale = 4 * Sqrt2; break;
     default: assert(0); break;
     }
 
@@ -189,8 +185,7 @@ void reference_adst_1d(const double *in, double *out, int size) {
     }
 }
 
-void reference_txfm_1d(TxType1D type, const double *in, double *out,
-                       int size) {
+void reference_txfm_1d(TxType1D type, const double *in, double *out, int size) {
     switch (type) {
     case DCT_1D: reference_dct_1d(in, out, size); break;
     case ADST_1D:

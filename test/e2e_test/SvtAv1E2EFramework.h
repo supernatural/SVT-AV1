@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file SvtAv1E2EFramework.h
@@ -21,18 +27,6 @@
 #include "CompareTools.h"
 #include "EbDefinitions.h"
 #include "RefDecoder.h"
-
-#define INPUT_SIZE_576p_TH 0x90000    // 0.58 Million
-#define INPUT_SIZE_1080i_TH 0xB71B0   // 0.75 Million
-#define INPUT_SIZE_1080p_TH 0x1AB3F0  // 1.75 Million
-#define INPUT_SIZE_4K_TH 0x29F630     // 2.75 Million
-#define EB_OUTPUTSTREAMBUFFERSIZE_MACRO(resolution_size) \
-    ((resolution_size) < (INPUT_SIZE_1080i_TH)           \
-         ? 0x1E8480                                      \
-         : (resolution_size) < (INPUT_SIZE_1080p_TH)     \
-               ? 0x2DC6C0                                \
-               : (resolution_size) < (INPUT_SIZE_4K_TH) ? 0x2DC6C0 : 0x2DC6C0)
-
 // Copied from EbAppProcessCmd.c
 #define LONG_ENCODE_FRAME_ENCODE 4000
 #define SPEED_MEASUREMENT_INTERVAL 2000
@@ -97,7 +91,7 @@ class SvtAv1E2ETestFramework : public ::testing::TestWithParam<EncTestSetting> {
 
     /** Add custom process here, which will be invoked after
      encoding loop is finished, like output stats,
-     analyse the bitstream generated.
+     analyse the Bitstream generated.
     */
     virtual void post_process();
 
@@ -128,6 +122,7 @@ class SvtAv1E2ETestFramework : public ::testing::TestWithParam<EncTestSetting> {
 
   public:
     static VideoSource *prepare_video_src(const TestVideoVector &vector);
+    static EbColorFormat setup_video_format(VideoColorFormat fmt);
     static void setup_src_param(const VideoSource *source,
                                 EbSvtAv1EncConfiguration &config);
     /** get reconstructed frame from encoder, it should call after send data
@@ -182,10 +177,14 @@ class SvtAv1E2ETestFramework : public ::testing::TestWithParam<EncTestSetting> {
                           not */
     bool enable_decoder;        /**< flag to control if create av1 decoder */
     bool enable_stat;           /**< flag to control if output encoder stat */
-    bool enable_save_bitstream; /**< flag to control if the bitstream is saved
+    bool enable_save_bitstream; /**< flag to control if the Bitstream is saved
                                    on disk */
     bool
         enable_analyzer; /**< flag to control if create decoder with analyzer */
+    bool enable_config;  /**< flag to control if use configuratio of encoder
+                            params */
+    bool enable_invert_tile_decoding;
+    void *enc_config_; /**< handle of encoder configuration data structure */
 };
 
 }  // namespace svt_av1_e2e_test

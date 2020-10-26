@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file E2eTestVectors.h
@@ -17,6 +23,8 @@
 
 #include <map>
 #include "VideoSource.h"
+#include "EbDefinitions.h"
+#include "ConfigEncoder.h"
 
 /** @defgroup svt_av1_e2e_test_vector Test vectors for E2E test
  *  Defines the test vectors of E2E test, with file-type, width, height and
@@ -31,7 +39,8 @@ namespace svt_av1_e2e_test_vector {
 /** TestVectorFormat is enumerate type of input video file format */
 typedef enum TestVectorFormat {
     YUV_VIDEO_FILE,
-    Y4M_VIDEO_FILE
+    Y4M_VIDEO_FILE,
+    DUMMY_SOURCE
 } TestVectorFormat;
 
 /** TestVideoVector is tuple of test params in a test case */
@@ -40,21 +49,60 @@ typedef std::tuple<std::string,      /**< file name */
                    VideoColorFormat, /**< color format */
                    uint32_t,         /**< width */
                    uint32_t,         /**< height */
-                   uint8_t,          /**< bit depth */
+                   uint32_t,         /**< bit depth */
                    bool,             /**< compressed 2-bit in 10-bit frame */
                    uint32_t,         /**< start read position in frame */
                    uint32_t> /**< frames to test, (0) means full-frames*/
     TestVideoVector;
-
 const std::vector<TestVideoVector> default_test_vectors = {
-    std::make_tuple("park_joy_90p_8_420.y4m", Y4M_VIDEO_FILE, IMG_FMT_420, 160,
-                    90, 8, 0, 0, 0),
-    std::make_tuple("park_joy_90p_10_420.y4m", Y4M_VIDEO_FILE,
-                    IMG_FMT_420P10_PACKED, 160, 90, 10, 0, 0, 0),
     std::make_tuple("kirland_640_480_30.yuv", YUV_VIDEO_FILE, IMG_FMT_420, 640,
                     480, 8, 0, 0, 60),
     std::make_tuple("niklas_640_480_30.yuv", YUV_VIDEO_FILE, IMG_FMT_420, 640,
                     480, 8, 0, 0, 60),
+};
+
+const std::vector<TestVideoVector> incomplete_sb_test_vectors = {
+    std::make_tuple("park_joy_90p_8_420.y4m", Y4M_VIDEO_FILE, IMG_FMT_420, 160,
+                    90, 8, 0, 0, 0),
+    std::make_tuple("park_joy_90p_10_420.y4m", Y4M_VIDEO_FILE, IMG_FMT_420, 160,
+                    90, 10, 0, 0, 0),
+};
+
+const std::vector<TestVideoVector> res_480p_test_vectors = {
+    std::make_tuple("kirland_640_480_30.yuv", YUV_VIDEO_FILE, IMG_FMT_420, 640,
+                    480, 8, 0, 0, 60),
+    std::make_tuple("screendata.y4m", Y4M_VIDEO_FILE, IMG_FMT_420, 640, 480, 8,
+                    0, 0, 0),
+};
+
+const std::vector<TestVideoVector> screen_test_vectors = {
+    std::make_tuple("screendata.y4m", Y4M_VIDEO_FILE, IMG_FMT_420, 640, 480, 8,
+                    0, 0, 0),
+};
+
+const std::vector<TestVideoVector> dummy_test_vectors = {
+    std::make_tuple("colorbar_480p_8_420", DUMMY_SOURCE, IMG_FMT_420, 640, 480,
+                    8, 0, 0, 100),
+    std::make_tuple("colorbar_4k_8_420", DUMMY_SOURCE, IMG_FMT_420, 4096, 2160,
+                    8, 0, 0, 60),
+    std::make_tuple("colorbar_64x64_8_420", DUMMY_SOURCE, IMG_FMT_420, 64, 64,
+                    8, 0, 0, 60),
+    std::make_tuple("colorbar_480p_10_420", DUMMY_SOURCE, IMG_FMT_420, 640, 480,
+                    10, 0, 0, 100),
+    std::make_tuple("colorbar_4k_10_420", DUMMY_SOURCE, IMG_FMT_420, 4096, 2160,
+                    10, 0, 0, 60),
+    std::make_tuple("colorbar_64x64_10_420", DUMMY_SOURCE, IMG_FMT_420, 64, 64,
+                    10, 0, 0, 60),
+};
+
+const std::vector<TestVideoVector> dummy_422_test_vectors = {
+    std::make_tuple("colorbar_480p_8_422", DUMMY_SOURCE, IMG_FMT_422, 640, 480,
+                    8, 0, 0, 100),
+};
+
+const std::vector<TestVideoVector> dummy_444_test_vectors = {
+    std::make_tuple("colorbar_480p_8_444", DUMMY_SOURCE, IMG_FMT_444, 640, 480,
+                    8, 0, 0, 100),
 };
 
 using EncSetting = std::map<std::string, std::string>;
@@ -66,6 +114,17 @@ typedef struct EncTestSetting {
         std::string str = get_setting_str();
         str += "test vector: ";
         str += fn;
+        return str;
+    }
+
+    std::string to_cli(TestVideoVector& vector) const {
+        std::string str = "SvtAv1EncApp";
+        str += get_vector_cli(vector);
+        str += get_setting_cli();
+        append_token(str, "StreamFile");
+        str += "output.ivf";
+        append_token(str, "ReconFile");
+        str += "recon.yuv";
         return str;
     }
 
@@ -81,6 +140,51 @@ typedef struct EncTestSetting {
         return str;
     }
 
+    int color_fmt(VideoColorFormat fmt) const {
+        switch (fmt) {
+        case IMG_FMT_420:
+        case IMG_FMT_420P10_PACKED: return 420;
+        case IMG_FMT_422:
+        case IMG_FMT_422P10_PACKED: return 422;
+        case IMG_FMT_444:
+        case IMG_FMT_444P10_PACKED: return 444;
+        default: break;
+        }
+        return -1;
+    }
+
+    std::string get_vector_cli(TestVideoVector& vector) const {
+        std::string str;
+        append_token(str, "InputFile");
+        str += std::get<0>(vector);
+        if (std::get<1>(vector) != Y4M_VIDEO_FILE) {
+            append_token(str, "SourceWidth");
+            str += std::to_string(std::get<3>(vector));
+            append_token(str, "SourceHeight");
+            str += std::to_string(std::get<4>(vector));
+            append_token(str, "EncoderBitDepth");
+            str += std::to_string(std::get<5>(vector));
+            append_token(str, "EncoderColorFormat");
+            str += std::to_string(color_fmt(std::get<2>(vector)));
+        }
+        return str;
+    }
+
+    void append_token(std::string& str, const char* name) const {
+        str += " ";
+        str += get_enc_token(name);
+        str += " ";
+    }
+
+    std::string get_setting_cli() const {
+        std::string str;
+        for (auto x : setting) {
+            append_token(str, x.first.c_str());
+            str += x.second;
+        }
+        return str;
+    }
+
     std::string get_setting_name() const {
         return name;
     }
@@ -89,13 +193,14 @@ typedef struct EncTestSetting {
                                     const EncTestSetting& setting) {
         return os << setting.get_setting_str();
     }
-} EncTestSetting;
+    // used in INSTANTIATE_TEST_CASE_P to append the param info into the test
+    // name
+    static std::string GetSettingName(
+        const ::testing::TestParamInfo<EncTestSetting> setting) {
+        return setting.param.get_setting_name();
+    }
 
-// used in INSTANTIATE_TEST_CASE_P to append the param info into the test name
-static std::string GetSettingName(
-    const ::testing::TestParamInfo<EncTestSetting> setting) {
-    return setting.param.get_setting_name();
-}
+} EncTestSetting;
 
 /**
  * @brief      Generate test vectors from config file.
@@ -113,7 +218,8 @@ static inline const std::vector<EncTestSetting> generate_vector_from_config(
         svt_av1_video_source::VideoFileSource::get_vector_dir();
     cfg_fn = cfg_fn + '/' + config_file;
 
-    FILE* file_handle = fopen(cfg_fn.c_str(), "rt");
+    FILE* file_handle;
+    FOPEN(file_handle, cfg_fn.c_str(), "rt");
     if (file_handle != nullptr) {
         char line[1024] = {0};
         while (fgets(line, 1024, file_handle) != nullptr) {
@@ -155,7 +261,7 @@ static inline const std::vector<EncTestSetting> generate_vector_from_config(
                                              color_fmt_type,
                                              w,
                                              h,
-                                             bit_depth,
+                                             (uint8_t)bit_depth,
                                              compressed_10bit,
                                              start_frame,
                                              frame_count));

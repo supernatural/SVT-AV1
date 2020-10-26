@@ -40,7 +40,9 @@ ARCH_ARM equ 0
 ARCH_MIPS equ 0
 ARCH_PPC equ 0
 ARCH_X86 equ 0
+%ifndef ARCH_X86_64
 ARCH_X86_64 equ 1
+%endif
 CONFIG_ACCOUNTING equ 0
 CONFIG_ANALYZER equ 0
 CONFIG_AV1 equ 1
@@ -106,7 +108,7 @@ HAVE_WXWIDGETS equ 0
 
 
 %ifndef private_prefix
-    %define private_prefix aom
+    %define private_prefix eb_aom
 %endif
 
 %ifndef public_prefix

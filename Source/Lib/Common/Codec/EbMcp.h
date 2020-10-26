@@ -1,36 +1,33 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
 #ifndef EBMCP_H
 #define EBMCP_H
 
-#include "EbMcp_SSE2.h"
-#include "EbMcp_SSSE3.h"
-
-#include "EbDefinitions.h"
-#include "EbUtility.h"
-#include "EbPictureBufferDesc.h"
-#include "EbPictureControlSet.h"
-#include "EbSequenceControlSet.h"
-#include "EbMotionEstimationContext.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define USE_PRE_COMPUTE             0
+#define USE_PRE_COMPUTE 0
 
-    typedef struct MotionCompensationPredictionContext
-    {
-        EbByte                   avc_style_mcp_intermediate_result_buf0;                    // For short filter in MD
-        EbByte                   avc_style_mcp_intermediate_result_buf1;                    // For short filter in MD
+typedef struct MotionCompensationPredictionContext {
+    EbDctor dctor;
+    EbByte  avc_style_mcp_intermediate_result_buf0; // For short filter in MD
+    EbByte  avc_style_mcp_intermediate_result_buf1; // For short filter in MD
 #if !USE_PRE_COMPUTE
-        EbByte                   avc_style_mcp_two_d_interpolation_first_pass_filter_result_buf; // For short filter in MD
+    EbByte avc_style_mcp_two_d_interpolation_first_pass_filter_result_buf; // For short filter in MD
 #endif
-    } MotionCompensationPredictionContext;
+} MotionCompensationPredictionContext;
 
-    /** InterpolationFilter()
+/** InterpolationFilter()
             is generally defined interpolation filter function.
             There is a whole group of these functions, each of which corresponds to a particular
             integer/fractional sample, and the function is indexed in a function pointer array
@@ -57,75 +54,35 @@ extern "C" {
             is_last indicates if there is any further filtering (interpolation filtering)
             afterwards.
      */
-    typedef void(*InterpolationFilterNew)(
-        EbByte               ref_pic,               //8-bits input parameter, please refer to the detailed explanation above.
-        uint32_t             src_stride,            //input parameter
-        EbByte               dst,                  //output parameter, please refer to the detailed explanation above.
-        uint32_t             dst_stride,            //input parameter
-        uint32_t             pu_width,              //input parameter
-        uint32_t             pu_height,             //input parameter
-        int16_t             *first_pass_if_dst);      //input parameter, please refer to the detailed explanation above.
+extern void generate_padding(EbByte src_pic, uint32_t src_stride, uint32_t original_src_width,
+                             uint32_t original_src_height, uint32_t padding_width,
+                             uint32_t padding_height);
 
-    typedef void(*InterpolationFilterOutRaw)(
-        EbByte              ref_pic,               //8-bits input parameter, please refer to the detailed explanation above.
-        uint32_t            src_stride,            //input parameter
-        int16_t            *dst,                  //output parameter, please refer to the detailed explanation above.
-        uint32_t            pu_width,              //input parameter
-        uint32_t            pu_height,             //input parameter
-        int16_t            *first_pass_if_dst);      //input parameter, please refer to the detailed explanation above.
+extern void generate_padding16_bit(EbByte src_pic, uint32_t src_stride, uint32_t original_src_width,
+                                   uint32_t original_src_height, uint32_t padding_width,
+                                   uint32_t padding_height);
 
-    typedef void(*ChromaFilterNew)(
-        EbByte             ref_pic,
-        uint32_t           src_stride,
-        EbByte             dst,
-        uint32_t           dst_stride,
-        uint32_t           pu_width,
-        uint32_t           pu_height,
-        int16_t           *first_pass_if_dst,
-        uint32_t           frac_pos_x,
-        uint32_t           frac_pos_y);
+extern void pad_input_picture(EbByte src_pic, uint32_t src_stride, uint32_t original_src_width,
+                              uint32_t original_src_height, uint32_t pad_right,
+                              uint32_t pad_bottom);
 
-    typedef void(*ChromaFilterOutRaw)(
-        EbByte             ref_pic,
-        uint32_t           src_stride,
-        int16_t           *dst,
-        uint32_t           pu_width,
-        uint32_t           pu_height,
-        int16_t           *first_pass_if_dst,
-        uint32_t           frac_pos_x,
-        uint32_t           frac_pos_y);
-    extern EbErrorType in_loop_me_context_ctor(
-        SsMeContext                         **ss_mecontext);
+extern void pad_input_picture_16bit(uint16_t* src_pic, uint32_t src_stride,
+                                    uint32_t original_src_width, uint32_t original_src_height,
+                                    uint32_t pad_right, uint32_t pad_bottom);
 
-    extern void generate_padding(
-        EbByte              src_pic,
-        uint32_t            src_stride,
-        uint32_t            original_src_width,
-        uint32_t            original_src_height,
-        uint32_t            padding_width,
-        uint32_t            padding_height);
+    void generate_padding_l(EbByte src_pic, uint32_t src_stride,
+        uint32_t row_height, uint32_t padding_width);
+    void generate_padding_r(EbByte src_pic, uint32_t src_stride,
+        uint32_t row_width, uint32_t row_height, uint32_t padding_width);
+    void generate_padding_t(EbByte src_pic, uint32_t src_stride,
+        uint32_t row_width, uint32_t padding_height);
+    void generate_padding_b(EbByte src_pic, uint32_t src_stride,
+        uint32_t row_width, uint32_t row_height, uint32_t padding_height);
 
-    extern void generate_padding16_bit(
-        EbByte              src_pic,
-        uint32_t            src_stride,
-        uint32_t            original_src_width,
-        uint32_t            original_src_height,
-        uint32_t            padding_width,
-        uint32_t            padding_height);
-
-    extern void pad_input_picture(
-        EbByte              src_pic,
-        uint32_t            src_stride,
-        uint32_t            original_src_width,
-        uint32_t            original_src_height,
-        uint32_t            pad_right,
-        uint32_t            pad_bottom);
-
-    // Function Tables (Super-long, declared in EbMcpTables.c)
-    extern const InterpolationFilterNew     uni_pred_luma_if_function_ptr_array_new[ASM_TYPE_TOTAL][16];
-    extern const InterpolationFilterOutRaw  bi_pred_luma_if_function_ptr_array_new[ASM_TYPE_TOTAL][16];
-    extern const ChromaFilterNew            uni_pred_chroma_if_function_ptr_array_new[ASM_TYPE_TOTAL][64];
-    extern const ChromaFilterOutRaw         bi_pred_chroma_if_function_ptr_array_new[ASM_TYPE_TOTAL][64];
+    void generate_padding_l_hbd(EbByte src_pic, uint32_t src_stride,
+        uint32_t row_height, uint32_t padding_width);
+    void generate_padding_r_hbd(EbByte src_pic, uint32_t src_stride,
+        uint32_t row_width, uint32_t row_height, uint32_t padding_width);
 
 #ifdef __cplusplus
 }

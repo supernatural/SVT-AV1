@@ -1,7 +1,14 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
+
 
 /******************************************************************************
  * @file random.h
@@ -31,9 +38,12 @@ namespace svt_av1_test_tool {
 
 using std::mt19937;
 using std::uniform_int_distribution;
+using std::uniform_real_distribution;
 
-/** SVTRandom defines a tool class for generating random integer as uint test
- * samples*/
+/** SVTRandom defines a tool class for generating random integer as unit test
+ * samples and params, the tool can support a random 32-bit integer from
+ * [-2^31,2^31).
+ */
 class SVTRandom {
   public:
     /** contructor with given minimum and maximum bound of random integer*/
@@ -46,7 +56,12 @@ class SVTRandom {
     SVTRandom(const int nbits, const bool is_signed)
         : gen_(deterministic_seed_) {
         calculate_bounds(nbits, is_signed);
-        return;
+    }
+
+    /** contructor with given minimum and maximum bound of random real*/
+    SVTRandom(const float min_bound, const float max_bound)
+        : gen_(deterministic_seed_) {
+        setup(min_bound, max_bound);
     }
 
     /** contructor with given minimum, maximum bound of random integer and seed
@@ -71,12 +86,30 @@ class SVTRandom {
         gen_.seed(seed);
     }
 
+    /** reset generator with default seed
+     */
+    void reset() {
+        gen_.seed(deterministic_seed_);
+    }
+
     /** generate a new random integer with minimum and maximum bounds
      * @return:
      * value of random integer
      */
     int random() {
         return dist_nbit_(gen_);
+    }
+
+    float random_float() {
+        return (float)dist_real_(gen_);
+    }
+
+    uint8_t Rand8(void) {
+        return (uint8_t)(random());
+    }
+
+    uint16_t Rand16(void) {
+        return (uint16_t)(random());
     }
 
   private:
@@ -87,10 +120,17 @@ class SVTRandom {
         dist_nbit_.param(param);
     }
 
+    void setup(const float min_bound, const float max_bound) {
+        assert(min_bound <= max_bound);
+        decltype(dist_real_)::param_type param{min_bound, max_bound};
+        dist_real_.param(param);
+    }
+
     /** calculate and setup bounds of generator */
     void calculate_bounds(const int nbits, const bool is_signed) {
-        assert(is_signed ? nbits < 31 : nbits <= 31);
-        int set_bits = is_signed ? nbits - 1 : nbits;
+        assert(nbits <= 32);
+        int set_bits =
+            is_signed ? nbits - 1 : (nbits == 32 ? nbits - 1 : nbits);
         int min_bound = 0, max_bound = 0;
         for (int i = 0; i < set_bits; i++)
             max_bound |= (1 << i);
@@ -100,9 +140,10 @@ class SVTRandom {
     }
 
   private:
-    const int deterministic_seed_{13596};  /**< seed of random generator */
-    std::mt19937 gen_;                     /**< random integer generator */
-    uniform_int_distribution<> dist_nbit_; /**< rule of generator */
+    const int deterministic_seed_{13596};   /**< seed of random generator */
+    std::mt19937 gen_;                      /**< random integer generator */
+    uniform_int_distribution<> dist_nbit_;  /**< rule of integer generator */
+    uniform_real_distribution<> dist_real_; /**< rule of real generator */
 };
 
 }  // namespace svt_av1_test_tool
